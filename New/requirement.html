@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>コインシールド要件</title>
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
     <style>
       * { box-sizing: border-box; }
 
@@ -384,6 +385,93 @@
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
+
+      @media (max-width: 600px) {
+        body {
+          min-height: 100svh;
+          padding: calc(16px + env(safe-area-inset-top)) 10px calc(20px + env(safe-area-inset-bottom));
+        }
+
+        .container {
+          width: 100%;
+        }
+
+        header {
+          margin-bottom: 18px;
+        }
+
+        .header-text {
+          font-size: 1.15rem;
+          letter-spacing: 0.02em;
+        }
+
+        .requirements-panel {
+          width: 100%;
+          padding: 22px 16px;
+          border-radius: 14px;
+        }
+
+        .amount-section {
+          margin-bottom: 22px;
+        }
+
+        .amount-label {
+          font-size: 11px;
+          letter-spacing: 0.06em;
+          line-height: 1.5;
+        }
+
+        .amount-value {
+          min-height: 44px;
+          padding: 10px 0;
+          font-size: 15px;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+
+        .calculate-button,
+        #confirmDeactivationBtn {
+          width: 100%;
+          min-height: 44px;
+          margin-left: auto;
+          margin-right: auto;
+          padding: 11px 14px;
+          font-size: 12px;
+        }
+
+        #submissionDetailsSection {
+          width: 100%;
+          overflow: hidden;
+        }
+
+        #submissionDetailsSection > div,
+        #deactivationSummary {
+          max-width: 100%;
+        }
+
+        #walletAddress {
+          min-width: 0;
+          width: 100%;
+          font-size: 11px !important;
+          min-height: 64px;
+          line-height: 1.45;
+          resize: none;
+          overflow-wrap: anywhere;
+          word-break: break-all;
+        }
+
+        #copyButton {
+          width: 100%;
+          min-height: 42px;
+          margin-top: 8px;
+        }
+
+        .confirmation-modal {
+          width: calc(100% - 28px);
+          min-width: 0;
+          padding: 26px 18px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -458,9 +546,9 @@
           <!-- Submission Address -->
           <div style="margin-bottom: 16px;">
             <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px;">提出先アドレス</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" id="walletAddress" value="0x6342be958F23B937371ba8d488BC8128E8ace8eE" style="flex: 1; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #0f172a; font-family: monospace;" readonly />
-              <button type="button" id="copyButton" style="padding: 8px 12px; background: #f5f5f5; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">📋 コピー</button>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <textarea id="walletAddress" rows="3" style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #0f172a; font-family: monospace; background: #ffffff;" readonly>0x6342be958F23B937371ba8d488BC8128E8ace8eE</textarea>
+              <button type="button" id="copyButton" style="width: 100%; padding: 8px 12px; background: #f5f5f5; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">📋 コピー</button>
             </div>
           </div>
 

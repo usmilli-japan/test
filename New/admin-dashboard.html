@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard - Payment Verification</title>
+    <link rel="icon" type="image/png" href="../assets/favicon.png">
     <style>
         * { box-sizing: border-box; }
 
@@ -844,6 +845,74 @@
         </div>
     </div>
 
+    <style>
+        @media (max-width: 760px) {
+            .admin-navbar {
+                padding: 14px 16px;
+                gap: 10px;
+            }
+
+            .navbar-logo {
+                font-size: 14px;
+            }
+
+            .admin-info {
+                gap: 8px;
+                font-size: 12px;
+            }
+
+            .admin-layout {
+                display: block;
+                min-height: 0;
+            }
+
+            .admin-sidebar {
+                border-right: 0;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 10px;
+                overflow-x: auto;
+            }
+
+            .sidebar-menu {
+                display: flex;
+                gap: 6px;
+                min-width: max-content;
+            }
+
+            .sidebar-menu li {
+                margin: 0;
+            }
+
+            .sidebar-menu a {
+                padding: 10px 12px;
+                white-space: nowrap;
+                font-size: 12px;
+            }
+
+            .admin-main {
+                padding: 20px 12px;
+            }
+
+            .page-title {
+                font-size: 22px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .review-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 14px;
+            }
+
+            .review-actions .action-btn {
+                width: 100%;
+                min-height: 44px;
+            }
+        }
+    </style>
     <script>
         let payments = [];
         let currentReviewId = null;

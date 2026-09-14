@@ -468,3 +468,37 @@ body {
     right: 14px;
   }
 }
+
+@media (max-width: 480px) {
+  body {
+    min-height: 100svh;
+    padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
+  }
+
+  .page-shell {
+    min-height: 100svh;
+  }
+
+  .shape-card {
+    width: min(88vw, 350px);
+    height: min(88vw, 350px);
+    border-radius: 22px;
+  }
+
+  .card-header {
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    font-size: 10px;
+  }
+
+  .timer-wrap {
+    top: 43%;
+  }
+
+  .proceed-button {
+    min-height: 44px;
+    width: min(78%, 230px);
+    font-size: 12px;
+  }
+}

@@ -527,7 +527,8 @@
         /* Responsive Design */
         @media (max-width: 480px) {
             .profile-page-container {
-                padding: 10px;
+                min-height: 100svh;
+                padding: calc(10px + env(safe-area-inset-top)) 10px calc(18px + env(safe-area-inset-bottom));
             }
 
             .profile-page-header {
@@ -540,7 +541,8 @@
             }
 
             .profile-page-card {
-                padding: 25px;
+                width: 100%;
+                padding: 20px 14px;
                 border-radius: 15px;
             }
 
