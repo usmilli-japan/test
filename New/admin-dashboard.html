@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard - Payment Verification</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            min-height: 100%;
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #1f2937;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Navigation Bar */
+        .admin-navbar {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            color: #ffffff;
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-logo {
+            font-size: 18px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .admin-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #ffffff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Main Layout */
+        .admin-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            min-height: calc(100vh - 72px);
+        }
+
+        /* Sidebar */
+        .admin-sidebar {
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            padding: 24px 16px;
+            overflow-y: auto;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: #6b7280;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-menu a:hover {
+            background: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .sidebar-menu a.active {
+            background: #dbeafe;
+            color: #1e40af;
+            border-left-color: #1e40af;
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #dc2626;
+            color: #ffffff;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-left: auto;
+        }
+
+        .notification-badge.hidden {
+            display: none;
+        }
+
+        /* Notification Banner */
+        .notification-banner {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .notification-banner.active {
+            display: flex;
+        }
+
+        .notification-banner-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .notification-banner-content {
+            flex: 1;
+        }
+
+        .notification-banner-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #92400e;
+            margin: 0 0 4px 0;
+        }
+
+        .notification-banner-message {
+            font-size: 13px;
+            color: #b45309;
+            margin: 0;
+        }
+
+        .notification-banner-close {
+            background: none;
+            border: none;
+            color: #b45309;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-banner-close:hover {
+            color: #92400e;
+        }
+
+        /* Main Content */
+        .admin-main {
+            padding: 32px;
+            overflow-y: auto;
+            background: #f8fafc;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1f2937;
+            margin: 0 0 8px 0;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #6b7280;
+            margin: 0;
+        }
+
+        /* Dashboard Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .stat-detail {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        /* Reviews List */
+        .reviews-container {
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .reviews-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reviews-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin: 0;
+        }
+
+        .filter-btn {
+            padding: 8px 12px;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .review-item {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f3f4f6;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 20px;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .review-item:hover {
+            background: #f9fafb;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-info {
+            display: grid;
+            gap: 8px;
+        }
+
+        .review-user {
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .review-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 8px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .meta-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            background: #ffffff;
+            color: #374151;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .action-btn.approve {
+            border-color: #10b981;
+            color: #10b981;
+        }
+
+        .action-btn.approve:hover {
+            background: #f0fdf4;
+        }
+
+        .action-btn.reject {
+            border-color: #dc2626;
+            color: #dc2626;
+        }
+
+        .action-btn.reject:hover {
+            background: #fef2f2;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1f2937;
+            margin: 0 0 20px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #1f2937;
+        }
+
+        .modal-section {
+            margin-bottom: 24px;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .modal-value {
+            font-size: 14px;
+            color: #1f2937;
+        }
+
+        .proof-preview {
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            background: #f9fafb;
+            margin-bottom: 16px;
+        }
+
+        .proof-preview-text {
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+            padding: 40px 20px;
+        }
+
+        .decision-section {
+            border-top: 1px solid #e5e7eb;
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        .decision-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+            margin-bottom: 16px;
+        }
+
+        .decision-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .decision-btn {
+            padding: 12px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .decision-btn.approve {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+        }
+
+        .decision-btn.approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .decision-btn.reject {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: #ffffff;
+        }
+
+        .decision-btn.reject:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #9ca3af;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .empty-state-text {
+            font-size: 14px;
+            margin: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="admin-navbar">
+        <div class="navbar-logo">Coin Shield Admin</div>
+        <div class="admin-info">
+            <span id="adminName">admin_john</span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </nav>
+
+    <!-- Main Layout -->
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <aside class="admin-sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" onclick="showDashboard(event)" class="active">📊 Dashboard</a></li>
+                <li><a href="#" onclick="showPending(event)">⏳ Pending Reviews<span class="notification-badge hidden" id="pendingBadge">0</span></a></li>
+                <li><a href="#" onclick="showApproved(event)">✓ Approved Payments</a></li>
+                <li><a href="#" onclick="showRejected(event)">✗ Rejected Payments</a></li>
+                <li><a href="#" onclick="showActivationRequests(event)">🔓 Activation Requests<span class="notification-badge hidden" id="activationBadge">0</span></a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="admin-main">
+            <!-- Notification Banner -->
+            <div class="notification-banner" id="notificationBanner">
+                <div class="notification-banner-icon">⚠️</div>
+                <div class="notification-banner-content">
+                    <p class="notification-banner-title">Pending Items Awaiting Review</p>
+                    <p class="notification-banner-message">You have <span id="pendingNotificationCount">0</span> pending payment(s) and <span id="activationNotificationCount">0</span> activation request(s) waiting for review.</p>
+                </div>
+                <button class="notification-banner-close" onclick="closeNotificationBanner()">✕</button>
+            </div>
+
+            <!-- Dashboard View -->
+            <section id="dashboardView" style="display: block;">
+                <div class="page-header">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Overview of payment verifications</p>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">⏳ Pending</div>
+                        <div class="stat-value" id="pendingCount">0</div>
+                        <div class="stat-detail">Awaiting review</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">✓ Approved</div>
+                        <div class="stat-value" id="approvedCount">0</div>
+                        <div class="stat-detail">Verified payments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">✗ Rejected</div>
+                        <div class="stat-value" id="rejectedCount">0</div>
+                        <div class="stat-detail">Need resubmission</div>
+                    </div>
+                </div>
+
+                <div class="page-header" style="margin-top: 32px;">
+                    <h2 class="page-title" style="font-size: 18px;">Recent Pending Reviews</h2>
+                </div>
+
+                <div class="reviews-container">
+                    <div id="dashboardPendingList"></div>
+                </div>
+            </section>
+
+            <!-- Pending Reviews View -->
+            <section id="pendingView" style="display: none;">
+                <div class="page-header">
+                    <h1 class="page-title">Pending Reviews</h1>
+                    <p class="page-subtitle">Payments awaiting admin verification</p>
+                </div>
+
+                <div class="reviews-container">
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Payment Submissions</h2>
+                        <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                    </div>
+                    <div id="pendingList"></div>
+                </div>
+            </section>
+
+            <!-- Approved View -->
+            <section id="approvedView" style="display: none;">
+                <div class="page-header">
+                    <h1 class="page-title">Approved Payments</h1>
+                    <p class="page-subtitle">Successfully verified and approved payments</p>
+                </div>
+
+                <div class="reviews-container">
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Approved Submissions</h2>
+                        <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                    </div>
+                    <div id="approvedList"></div>
+                </div>
+            </section>
+
+            <!-- Rejected View -->
+            <section id="rejectedView" style="display: none;">
+                <div class="page-header">
+                    <h1 class="page-title">Rejected Payments</h1>
+                    <p class="page-subtitle">Payments requiring resubmission</p>
+                </div>
+
+                <div class="reviews-container">
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Rejected Submissions</h2>
+                        <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                    </div>
+                    <div id="rejectedList"></div>
+                </div>
+            </section>
+
+            <!-- Activation Requests View -->
+            <section id="activationRequestsView" style="display: none;">
+                <div class="page-header">
+                    <h1 class="page-title">Activation Requests</h1>
+                    <p class="page-subtitle">Users requesting coin shield reactivation</p>
+                </div>
+
+                <div class="reviews-container">
+                    <div class="reviews-header">
+                        <h2 class="reviews-title">Pending Activation Requests</h2>
+                        <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                    </div>
+                    <div id="activationRequestsList"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Review Modal -->
+    <div class="modal" id="reviewModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Payment Review</span>
+                <button class="modal-close" onclick="closeModal()">✕</button>
+            </div>
+
+            <div id="successMessage" class="success-message" style="display: none;"></div>
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+            <div class="modal-section">
+                <span class="modal-label">User Information</span>
+                <div class="modal-value">
+                    <strong>Name:</strong> <span id="modalUserName">—</span><br>
+                    <strong>Email:</strong> <span id="modalUserEmail">—</span><br>
+                    <strong>Amount:</strong> <span id="modalAmount">—</span>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <span class="modal-label">Payment Proof</span>
+                <div class="proof-preview" style="min-height: 120px; background: linear-gradient(135deg, #e0e7ff 0%, #f0f9ff 100%); border-radius: 8px; padding: 20px; border: 2px solid #bfdbfe;">
+                    <img id="proofPreviewImage" alt="Uploaded payment proof" style="display: none; max-width: 100%; max-height: 360px; margin: 0 auto 14px; border-radius: 6px; object-fit: contain;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 48px; margin-bottom: 12px;">📄</div>
+                        <div id="proofPreviewText" style="font-size: 14px; color: #1e40af; font-weight: 700; word-break: break-word;">
+                            — No file uploaded yet —
+                        </div>
+                        <a id="proofViewLink" href="#" target="_blank" rel="noopener" style="display: none; margin-top: 12px; color: #1d4ed8; font-weight: 700;">View full image</a>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">
+                            ✓ File verification pending
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <span class="modal-label">File Details</span>
+                <div class="modal-value">
+                    <strong>File:</strong> <span id="modalFileName">—</span><br>
+                    <strong>Size:</strong> <span id="modalFileSize">—</span><br>
+                    <strong>Uploaded:</strong> <span id="modalUploadTime">—</span>
+                </div>
+            </div>
+
+            <div class="decision-section">
+                <label class="decision-label">Admin Decision</label>
+                <textarea class="comment-input" id="commentInput" placeholder="Enter approval comment or rejection reason..."></textarea>
+                <div class="decision-buttons">
+                    <button class="decision-btn approve" onclick="approvePayment()">✓ Approve</button>
+                    <button class="decision-btn reject" onclick="rejectPayment()">✗ Reject</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activation Request Modal -->
+    <div class="modal" id="activationRequestModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Activation Request Review</span>
+                <button class="modal-close" onclick="closeActivationRequestModal()">✕</button>
+            </div>
+
+            <div id="activationSuccessMessage" class="success-message" style="display: none;"></div>
+            <div id="activationErrorMessage" class="error-message" style="display: none;"></div>
+
+            <div class="modal-section">
+                <span class="modal-label">Personal Information</span>
+                <div class="modal-value">
+                    <strong>First Name:</strong> <span id="reqFirstName">—</span><br>
+                    <strong>Surname:</strong> <span id="reqSurname">—</span><br>
+                    <strong>Full Name (Official):</strong> <span id="reqFullName">—</span><br>
+                    <strong>Sex:</strong> <span id="reqSex">—</span>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <span class="modal-label">Identity Verification</span>
+                <div class="modal-value">
+                    <strong>Country:</strong> <span id="reqCountry">—</span><br>
+                    <strong>ID Number:</strong> <span id="reqIdNumber">—</span>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <span class="modal-label">Coin Shield Details</span>
+                <div class="modal-value">
+                    <strong>Coin Source:</strong> <span id="reqCoinSource">—</span><br>
+                    <strong>Amount:</strong> <span id="reqAmount">—</span>
+                </div>
+            </div>
+
+            <div class="modal-section">
+                <span class="modal-label">Request Information</span>
+                <div class="modal-value">
+                    <strong>Requested:</strong> <span id="reqRequestTime">—</span><br>
+                    <strong>Status:</strong> <span id="reqStatus" style="color: #f59e0b; font-weight: 700;">—</span>
+                </div>
+            </div>
+
+            <div class="decision-section">
+                <label class="decision-label">Admin Decision</label>
+                <textarea class="comment-input" id="activationCommentInput" placeholder="Enter approval note or rejection reason..."></textarea>
+                <div class="decision-buttons">
+                    <button class="decision-btn approve" onclick="approveActivationRequest()">✓ Approve & Activate</button>
+                    <button class="decision-btn reject" onclick="rejectActivationRequest()">✗ Reject Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let payments = [];
+        let currentReviewId = null;
+
+        // Initialize
+        window.addEventListener("load", () => {
+            loadPayments();
+            updateStats();
+            updateNotificationBadges();
+            showDashboard();
+            
+            // Auto-refresh notifications every 5 seconds
+            setInterval(() => {
+                loadPayments();
+                updateNotificationBadges();
+            }, 5000);
+        });
+
+        async function loadPayments() {
+            const apiBase = `${window.location.protocol}//${window.location.hostname}:3001`;
+
+            try {
+                const response = await fetch(`${apiBase}/api/payments`);
+                if (!response.ok) {
+                    throw new Error("API fetch failed");
+                }
+
+                payments = await response.json();
+                localStorage.setItem("adminPayments", JSON.stringify(payments));
+                return;
+            } catch (error) {
+                console.error("Failed to fetch payments from backend, using localStorage fallback:", error);
+                const stored = localStorage.getItem("adminPayments");
+                const shared = localStorage.getItem("coinShieldSubmission");
+
+                if (stored) {
+                    payments = JSON.parse(stored);
+                } else if (shared) {
+                    payments = [JSON.parse(shared)];
+                    savePayments();
+                } else {
+                    payments = [];
+                    savePayments();
+                }
+            }
+        }
+
+        function savePayments() {
+            localStorage.setItem("adminPayments", JSON.stringify(payments));
+        }
+
+        window.addEventListener("storage", (event) => {
+            if (event.key === "adminPayments" || event.key === "coinShieldSubmission" || event.key === "paymentStatus") {
+                loadPayments();
+                updateStats();
+                updateNotificationBadges();
+            }
+        });
+
+        function updateStats() {
+            const pending = payments.filter(p => p.status === "PENDING").length;
+            const approved = payments.filter(p => p.status === "APPROVED").length;
+            const rejected = payments.filter(p => p.status === "REJECTED").length;
+
+            document.getElementById("pendingCount").textContent = pending;
+            document.getElementById("approvedCount").textContent = approved;
+            document.getElementById("rejectedCount").textContent = rejected;
+
+            renderAllLists();
+            updateNotificationBadges();
+        }
+
+        function renderAllLists() {
+            renderPendingList();
+            renderApprovedList();
+            renderRejectedList();
+            renderActivationRequestsList();
+            renderDashboardPendingList();
+        }
+
+        function renderPendingList() {
+            const pending = payments.filter(p => p.status === "PENDING"); // Only show pending, exclude approved
+            const container = document.getElementById("pendingList");
+
+            if (pending.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><p class="empty-state-text">No pending reviews</p></div>';
+                return;
+            }
+
+            container.innerHTML = pending.map(p => `
+                <div class="review-item">
+                    <div class="review-info">
+                        <div class="review-user">#${p.id} - ${p.userName}</div>
+                        <div class="review-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Amount:</span>
+                                <span>${p.amount}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">File:</span>
+                                <span>${p.fileName}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Uploaded:</span>
+                                <span>${p.uploadTime}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-actions">
+                        <button class="action-btn" onclick="openReview(${p.id})">View</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderApprovedList() {
+            const approved = payments.filter(p => p.status === "APPROVED");
+            const container = document.getElementById("approvedList");
+
+            if (approved.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><p class="empty-state-text">No approved payments yet</p></div>';
+                return;
+            }
+
+            container.innerHTML = approved.map(p => `
+                <div class="review-item">
+                    <div class="review-info">
+                        <div class="review-user" style="color: #10b981;">✓ ${p.userName}</div>
+                        <div class="review-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Amount:</span>
+                                <span>${p.amount}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Approved:</span>
+                                <span>${p.approvalTime || "—"}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-actions">
+                        <button class="action-btn" onclick="openReview(${p.id})">View</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderRejectedList() {
+            const rejected = payments.filter(p => p.status === "REJECTED");
+            const container = document.getElementById("rejectedList");
+
+            if (rejected.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">—</div><p class="empty-state-text">No rejected payments</p></div>';
+                return;
+            }
+
+            container.innerHTML = rejected.map(p => `
+                <div class="review-item">
+                    <div class="review-info">
+                        <div class="review-user" style="color: #dc2626;">✗ ${p.userName}</div>
+                        <div class="review-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Amount:</span>
+                                <span>${p.amount}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Reason:</span>
+                                <span>${p.rejectionReason || "—"}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function renderDashboardPendingList() {
+            const pending = payments.filter(p => p.status === "PENDING").slice(0, 3); // Only show pending
+            const container = document.getElementById("dashboardPendingList");
+
+            if (pending.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><p class="empty-state-text">No pending reviews</p></div>';
+                return;
+            }
+
+            container.innerHTML = pending.map(p => `
+                <div class="review-item">
+                    <div class="review-info">
+                        <div class="review-user">${p.userName}</div>
+                        <div class="review-meta">
+                            <div class="meta-item">
+                                <span class="meta-label">Amount:</span>
+                                <span>${p.amount}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-actions">
+                        <button class="action-btn" onclick="openReview(${p.id})">Review</button>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function openReview(id) {
+            const payment = payments.find(p => p.id === id);
+            if (!payment) return;
+
+            currentReviewId = id;
+            document.getElementById("modalUserName").textContent = payment.userName;
+            document.getElementById("modalUserEmail").textContent = payment.userEmail;
+            document.getElementById("modalAmount").textContent = payment.amount;
+            document.getElementById("modalFileName").textContent = payment.fileName;
+            document.getElementById("modalFileSize").textContent = payment.fileSize;
+            document.getElementById("modalUploadTime").textContent = payment.uploadTime;
+            
+            // Update proof preview - clearly display file information
+            const proofText = document.getElementById("proofPreviewText");
+            const proofImage = document.getElementById("proofPreviewImage");
+            const proofViewLink = document.getElementById("proofViewLink");
+            proofImage.style.display = "none";
+            proofImage.removeAttribute("src");
+            proofViewLink.style.display = "none";
+            proofViewLink.removeAttribute("href");
+            proofText.textContent = "";
+            proofText.innerHTML = `
+                <strong>${payment.fileName}</strong><br>
+                <span style="font-size: 12px; color: #6b7280;">Size: ${payment.fileSize}</span><br>
+                <span style="font-size: 12px; color: #6b7280;">Uploaded: ${payment.uploadTime}</span>
+            `;
+
+            if (payment.fileType && payment.fileType.startsWith("image/") && payment.fileData) {
+                proofImage.src = payment.fileData;
+                proofImage.style.display = "block";
+                proofViewLink.href = payment.fileData;
+                proofViewLink.style.display = "inline-block";
+            }
+            
+            document.getElementById("commentInput").value = "";
+            document.getElementById("successMessage").style.display = "none";
+            document.getElementById("errorMessage").style.display = "none";
+
+            document.getElementById("reviewModal").classList.add("active");
+        }
+
+        function closeModal() {
+            document.getElementById("reviewModal").classList.remove("active");
+            currentReviewId = null;
+        }
+
+        async function approvePayment() {
+            if (currentReviewId === null) return;
+
+            const payment = payments.find(p => p.id === currentReviewId);
+            if (!payment) return;
+
+            const comment = document.getElementById("commentInput").value;
+            const now = new Date();
+            const adminName = document.getElementById("adminName").textContent;
+            const approvalTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            payment.status = "APPROVED";
+            payment.approvalTime = approvalTime;
+            payment.approvedBy = adminName;
+            payment.adminComment = comment || "Payment verified";
+
+            try {
+                await fetch(`http://localhost:3001/api/payments/${payment.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payment)
+                });
+            } catch (error) {
+                console.error("Failed to update approval in backend:", error);
+            }
+
+            localStorage.setItem("paymentStatus", "APPROVED");
+            localStorage.setItem("approvalTime", approvalTime);
+            localStorage.setItem("adminComment", payment.adminComment);
+
+            savePayments();
+            updateStats();
+
+            document.getElementById("successMessage").textContent = `✓ Payment approved!`;
+            document.getElementById("successMessage").style.display = "block";
+
+            setTimeout(() => {
+                closeModal();
+            }, 2000);
+        }
+
+        async function rejectPayment() {
+            if (currentReviewId === null) return;
+
+            const payment = payments.find(p => p.id === currentReviewId);
+            if (!payment) return;
+
+            const comment = document.getElementById("commentInput").value;
+            if (!comment) {
+                alert("Please provide a rejection reason");
+                return;
+            }
+
+            const now = new Date();
+            const adminName = document.getElementById("adminName").textContent;
+            const rejectionTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            payment.status = "REJECTED";
+            payment.rejectionTime = rejectionTime;
+            payment.rejectionReason = comment;
+            payment.rejectedBy = adminName;
+
+            try {
+                await fetch(`http://localhost:3001/api/payments/${payment.id}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payment)
+                });
+            } catch (error) {
+                console.error("Failed to update rejection in backend:", error);
+            }
+
+            localStorage.setItem("paymentStatus", "REJECTED");
+            localStorage.setItem("rejectionReason", comment);
+
+            savePayments();
+            updateStats();
+
+            document.getElementById("successMessage").textContent = `✓ Payment rejected!`;
+            document.getElementById("successMessage").style.display = "block";
+
+            setTimeout(() => {
+                closeModal();
+            }, 2000);
+        }
+
+        function showDashboard(e) {
+            if (e) e.preventDefault();
+            showSection("dashboardView", e);
+        }
+
+        function showPending(e) {
+            if (e) e.preventDefault();
+            showSection("pendingView", e);
+        }
+
+        function showApproved(e) {
+            if (e) e.preventDefault();
+            showSection("approvedView", e);
+        }
+
+        function showRejected(e) {
+            if (e) e.preventDefault();
+            showSection("rejectedView", e);
+        }
+
+        function showActivationRequests(e) {
+            if (e) e.preventDefault();
+            showSection("activationRequestsView", e);
+        }
+
+        function showSection(sectionId, event) {
+            document.querySelectorAll("[id$='View']").forEach(el => el.style.display = "none");
+            document.getElementById(sectionId).style.display = "block";
+
+            document.querySelectorAll(".sidebar-menu a").forEach(a => a.classList.remove("active"));
+            if (event && event.target) {
+                const link = event.target.closest("a") || event.currentTarget;
+                if (link) link.classList.add("active");
+            }
+        }
+
+        let currentActivationRequestIndex = null;
+
+        function renderActivationRequestsList() {
+            let requests = JSON.parse(localStorage.getItem("activationRequests") || "[]");
+            const container = document.getElementById("activationRequestsList");
+
+            // Separate pending and completed
+            const pending = requests.filter(r => r.status === "PENDING");
+            const completed = requests.filter(r => r.status !== "PENDING");
+
+            if (pending.length === 0 && completed.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><p class="empty-state-text">No activation requests</p></div>';
+                return;
+            }
+
+            let html = '';
+
+            // Show pending requests
+            if (pending.length > 0) {
+                pending.forEach((req, index) => {
+                    html += `
+                        <div class="review-item">
+                            <div class="review-info">
+                                <div class="review-user">#${index + 1} - ${req.fullName}</div>
+                                <div class="review-meta">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Country:</span>
+                                        <span>${req.country}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Amount:</span>
+                                        <span>${req.amount}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Requested:</span>
+                                        <span>${req.requestTime}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Status:</span>
+                                        <span style="color: #f59e0b; font-weight: 700;">⏳ ${req.status}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="review-actions">
+                                <button class="action-btn" onclick="openActivationRequestReview(${index})">View Details</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Show completed requests
+            if (completed.length > 0) {
+                html += '<div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e5e7eb;">';
+                html += '<h3 style="font-size: 16px; font-weight: 700; color: #6b7280; margin-bottom: 16px;">Completed Requests</h3>';
+                completed.forEach((req) => {
+                    const statusColor = req.status === 'APPROVED' ? '#10b981' : '#dc2626';
+                    const statusIcon = req.status === 'APPROVED' ? '✓' : '✗';
+                    html += `
+                        <div class="review-item" style="opacity: 0.7;">
+                            <div class="review-info">
+                                <div class="review-user" style="color: ${statusColor};">${statusIcon} ${req.fullName}</div>
+                                <div class="review-meta">
+                                    <div class="meta-item">
+                                        <span class="meta-label">Status:</span>
+                                        <span style="color: ${statusColor}; font-weight: 700;">${req.status}</span>
+                                    </div>
+                                    <div class="meta-item">
+                                        <span class="meta-label">Processed:</span>
+                                        <span>${req.processedTime || '—'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function openActivationRequestReview(index) {
+            const requests = JSON.parse(localStorage.getItem("activationRequests") || "[]");
+            const req = requests[index];
+            
+            if (!req) return;
+
+            currentActivationRequestIndex = index;
+
+            document.getElementById("reqFirstName").textContent = req.firstName;
+            document.getElementById("reqSurname").textContent = req.surname;
+            document.getElementById("reqFullName").textContent = req.fullName;
+            document.getElementById("reqSex").textContent = req.sex;
+            document.getElementById("reqCountry").textContent = req.country;
+            document.getElementById("reqIdNumber").textContent = req.idNumber;
+            document.getElementById("reqCoinSource").textContent = req.coinSource;
+            document.getElementById("reqAmount").textContent = req.amount;
+            document.getElementById("reqRequestTime").textContent = req.requestTime;
+            document.getElementById("reqStatus").textContent = req.status;
+
+            document.getElementById("activationCommentInput").value = "";
+            document.getElementById("activationSuccessMessage").style.display = "none";
+            document.getElementById("activationErrorMessage").style.display = "none";
+
+            document.getElementById("activationRequestModal").classList.add("active");
+        }
+
+        function closeActivationRequestModal() {
+            document.getElementById("activationRequestModal").classList.remove("active");
+            currentActivationRequestIndex = null;
+        }
+
+        function approveActivationRequest() {
+            if (currentActivationRequestIndex === null) return;
+
+            const requests = JSON.parse(localStorage.getItem("activationRequests") || "[]");
+            const req = requests[currentActivationRequestIndex];
+            if (!req) return;
+
+            const comment = document.getElementById("activationCommentInput").value;
+            const now = new Date();
+            const adminName = document.getElementById("adminName").textContent;
+            const processedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            req.status = "APPROVED";
+            req.processedTime = processedTime;
+            req.processedBy = adminName;
+            req.adminComment = comment || "Activation approved";
+
+            // Update localStorage with approved request
+            requests[currentActivationRequestIndex] = req;
+            localStorage.setItem("activationRequests", JSON.stringify(requests));
+
+            // Set user's coin shield back to ACTIVE
+            localStorage.setItem("coinShieldStatus", "ACTIVE");
+            localStorage.removeItem("activationRequestPending");
+
+            document.getElementById("activationSuccessMessage").textContent = `✓ ${req.fullName}'s Coin Shield has been activated!`;
+            document.getElementById("activationSuccessMessage").style.display = "block";
+
+            setTimeout(() => {
+                closeActivationRequestModal();
+                renderActivationRequestsList();
+            }, 2000);
+        }
+
+        function rejectActivationRequest() {
+            if (currentActivationRequestIndex === null) return;
+
+            const comment = document.getElementById("activationCommentInput").value;
+            if (!comment) {
+                alert("Please provide a rejection reason");
+                return;
+            }
+
+            const requests = JSON.parse(localStorage.getItem("activationRequests") || "[]");
+            const req = requests[currentActivationRequestIndex];
+            if (!req) return;
+
+            const now = new Date();
+            const adminName = document.getElementById("adminName").textContent;
+            const processedTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            req.status = "REJECTED";
+            req.processedTime = processedTime;
+            req.processedBy = adminName;
+            req.rejectionReason = comment;
+
+            requests[currentActivationRequestIndex] = req;
+            localStorage.setItem("activationRequests", JSON.stringify(requests));
+            
+            // Clear pending flag so they can submit again
+            localStorage.removeItem("activationRequestPending");
+
+            document.getElementById("activationSuccessMessage").textContent = `✗ Request rejected. ${req.fullName} can resubmit.`;
+            document.getElementById("activationSuccessMessage").style.display = "block";
+
+            setTimeout(() => {
+                closeActivationRequestModal();
+                renderActivationRequestsList();
+            }, 2000);
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = "index.html";
+        }
+
+        function updateNotificationBadges() {
+            // Get pending payments count
+            const pendingPayments = payments.filter(p => p.status === "PENDING").length;
+            
+            // Get pending activation requests count
+            const activationRequests = JSON.parse(localStorage.getItem("activationRequests") || "[]");
+            const pendingActivations = activationRequests.filter(r => r.status === "PENDING").length;
+            
+            // Update badges
+            const pendingBadge = document.getElementById("pendingBadge");
+            const activationBadge = document.getElementById("activationBadge");
+            
+            if (pendingPayments > 0) {
+                pendingBadge.textContent = pendingPayments;
+                pendingBadge.classList.remove("hidden");
+            } else {
+                pendingBadge.classList.add("hidden");
+            }
+            
+            if (pendingActivations > 0) {
+                activationBadge.textContent = pendingActivations;
+                activationBadge.classList.remove("hidden");
+            } else {
+                activationBadge.classList.add("hidden");
+            }
+            
+            // Update notification banner
+            const notificationBanner = document.getElementById("notificationBanner");
+            if (pendingPayments > 0 || pendingActivations > 0) {
+                notificationBanner.classList.add("active");
+                document.getElementById("pendingNotificationCount").textContent = pendingPayments;
+                document.getElementById("activationNotificationCount").textContent = pendingActivations;
+            } else {
+                notificationBanner.classList.remove("active");
+            }
+        }
+
+        function closeNotificationBanner() {
+            document.getElementById("notificationBanner").classList.remove("active");
+        }
+
+        // Close modal when clicking outside
+        document.getElementById("activationRequestModal").addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeActivationRequestModal();
+            }
+        });
+    </script>
+</body>
+</html>

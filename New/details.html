@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>コインシールド詳細</title>
+    <style>
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        background: #ffffff;
+        color: #edf3ff;
+        font-family: Arial, Helvetica, sans-serif;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #ffffff;
+        color: #edf3ff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      .page {
+        width: min(1100px, 100%);
+        margin: 32px auto 48px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 22px;
+        box-shadow: 0 16px 50px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+      }
+
+      .site-header {
+        padding: 30px 32px 20px;
+        border-bottom: 1px solid #edf0f4;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .site-header h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 2.8vw, 3.2rem);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #111827;
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .content {
+        padding: 28px 32px 34px;
+      }
+
+      .detail-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.8fr);
+        gap: 28px;
+        align-items: start;
+      }
+
+      .panel {
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        padding: 24px 20px;
+      }
+
+      .status-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+      }
+
+      .status-list li {
+        display: flex;
+        justify-content: space-between;
+        gap: 18px;
+        padding: 12px 0;
+        border-bottom: 1px solid #edf0f4;
+        color: #111827;
+        font-size: 14px;
+        line-height: 1.7;
+      }
+
+      .status-list li:last-child {
+        border-bottom: none;
+      }
+
+      .status-list strong {
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .status-list span {
+        color: #111827;
+        text-align: right;
+      }
+
+      .status-light {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .status-light::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.12);
+      }
+
+      .info-block {
+        margin-top: 18px;
+      }
+
+      .section-header {
+        margin: 0 0 12px;
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: #0f172a;
+        font-weight: 800;
+      }
+
+      .info-card {
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 18px 18px 14px;
+      }
+
+      .info-row {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid #eef2f6;
+        color: #111827;
+        font-size: 15px;
+      }
+
+      .info-row:last-child {
+        border-bottom: none;
+      }
+
+      .info-row .key {
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .confirm-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-top: 14px;
+        margin-top: 12px;
+        border-top: 1px solid #eef2f6;
+        color: #111827;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .confirm-row input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #111827;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .note {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-left: 4px solid #22c55e;
+        background: #f0fdf4;
+        border-radius: 12px;
+        color: #14532d;
+        font-size: 14px;
+        line-height: 1.7;
+        font-weight: 600;
+      }
+
+      .cta-wrap {
+        margin-top: 22px;
+      }
+
+      .cta-text {
+        margin: 0 0 14px;
+        color: #111827;
+        font-size: 15px;
+        line-height: 1.7;
+      }
+
+      .cta-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        min-height: 52px;
+        border: none;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        color: #ffffff;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        box-shadow: 0 12px 24px rgba(17, 24, 39, 0.15);
+        cursor: not-allowed;
+        opacity: 0.45;
+        filter: grayscale(0.18);
+        transition: opacity 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease, filter 0.25s ease, cursor 0.25s ease;
+      }
+
+      .cta-button.active {
+        cursor: pointer;
+        opacity: 1;
+        filter: none;
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 18px rgba(17, 24, 39, 0.35), 0 12px 24px rgba(17, 24, 39, 0.2);
+      }
+
+      .cta-button.active:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 0 0 1px rgba(255,255,255,0.08), 0 0 20px rgba(17, 24, 39, 0.45), 0 14px 28px rgba(17, 24, 39, 0.25);
+      }
+
+      @media (max-width: 760px) {
+        .detail-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .content {
+          padding: 22px 20px 30px;
+        }
+
+        .site-header {
+          padding: 24px 20px 16px;
+        }
+
+        .info-row {
+          grid-template-columns: 1fr;
+          gap: 4px;
+        }
+      }
+
+      @keyframes loadingProgress {
+        from {
+          width: 0%;
+        }
+        to {
+          width: 100%;
+        }
+      }
+
+      .loading-container {
+        display: none;
+        margin-top: 16px;
+      }
+
+      .loading-bar {
+        width: 100%;
+        height: 8px;
+        background: #e5e7eb;
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .loading-progress {
+        height: 100%;
+        background: linear-gradient(90deg, #0f172a 0%, #1e293b 100%);
+        border-radius: 4px;
+        animation: loadingProgress 60s linear forwards;
+      }
+
+      .loading-container.active {
+        display: block;
+      }
+
+      .completion-message {
+        display: none;
+        text-align: center;
+        margin-top: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        color: #10b981;
+      }
+
+      .completion-message.show {
+        display: block;
+      }
+
+      /* Glass Morphism Loading Screen */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes fadeInLoading {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      @keyframes fadeOutLoading {
+        from {
+          opacity: 1;
+        }
+        to {
+          opacity: 0;
+        }
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(23, 31, 44, 0.85));
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+        animation: fadeInLoading 0.3s ease-out;
+      }
+
+      .loading-overlay.hidden {
+        animation: fadeOutLoading 0.5s ease-out forwards;
+      }
+
+      .loading-glass-box {
+        padding: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        min-width: auto;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        border: 4px solid rgba(96, 165, 250, 0.2);
+        border-top: 4px solid #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        color: rgba(191, 219, 254, 0.95);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+      }
+
+      .loading-subtext {
+        color: rgba(191, 219, 254, 0.6);
+        font-size: 12px;
+        letter-spacing: 0.06em;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Glass Morphism Loading Screen -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-glass-box">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <main class="page">
+      <header class="site-header">
+        <h1>コインシールド詳細</h1>
+      </header>
+
+      <div class="content">
+        <div class="detail-layout">
+          <section class="panel">
+            <ul class="status-list">
+              <li><strong>コインシールドの状態:</strong> <span class="status-light">有効</span></li>
+              <li><strong>コインの出所:</strong> <span>Trust Wallet</span></li>
+              <li><strong>保護対象額:</strong> <span>31,498,098.25円</span></li>
+              <li><strong>予定特典:</strong> <span>5%</span></li>
+            </ul>
+
+            <div class="info-block">
+              <h2 class="section-header">個人情報</h2>
+
+              <div class="info-card">
+                <div class="info-row"><div class="key">名前:</div><div>池田 浩一</div></div>
+                <div class="info-row"><div class="key">性別:</div><div>男性</div></div>
+                <div class="info-row"><div class="key">国:</div><div>日本</div></div>
+                <div class="info-row"><div class="key">識別番号:</div><div>308168745100</div></div>
+
+                <label class="confirm-row">
+                  <input type="checkbox" />
+                  <span>進む前にここをチェックして本人確認を行ってください</span>
+                </label>
+              </div>
+
+              <div class="note">
+                予定特典は無効化の手続き中に残高へ自動的に加算されます。
+              </div>
+
+              <div class="cta-wrap">
+                <p class="cta-text">
+                  下のボタンをクリックして、コインシールド無効化の要件を確認してください。
+                </p>
+                <button class="cta-button" type="button" id="decryptButton" disabled>要件を復号する</button>
+                
+                <!-- Loading Container -->
+                <div class="loading-container" id="loadingContainer">
+                  <div class="loading-bar">
+                    <div class="loading-progress" id="loadingProgress"></div>
+                  </div>
+                  <div class="completion-message" id="completionMessage">
+                    ✓ 完了しました。クリックして進んでください
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="panel">
+            <h2 class="section-header">保護概要</h2>
+
+            <ul class="status-list">
+              <li><strong>有効化状態:</strong> <span>安全</span></li>
+              <li><strong>資産基盤:</strong> <span>Trust Wallet</span></li>
+              <li><strong>保護期間:</strong> <span>有効</span></li>
+              <li><strong>特典ポリシー:</strong> <span>無効化時に5%</span></li>
+            </ul>
+
+            <div class="info-block">
+              <h2 class="section-header">重要なお知らせ</h2>
+              <div class="info-card">
+                <p style="margin:0; color:#374151; line-height:1.8; font-size:15px;">
+                  コインシールドは有効な間、保護状態を維持します。無効化が完了すると、合意された特典を受け取れるようになります。この手続きは透明性と安全性を保ち、アカウントの状態に沿って行われます。
+                </p>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // Check if coin shield is deactivated
+      window.addEventListener('load', function() {
+        if (localStorage.getItem("coinShieldStatus") === "DEACTIVATED") {
+          alert("Your Coin Shield has been deactivated. Please return to home and request activation.");
+          window.location.replace("/profile.html");
+          return;
+        }
+      });
+
+      const confirmBox = document.querySelector('.confirm-row input[type="checkbox"]');
+      const decryptButton = document.getElementById('decryptButton');
+      const loadingContainer = document.getElementById('loadingContainer');
+      const loadingProgress = document.getElementById('loadingProgress');
+      const completionMessage = document.getElementById('completionMessage');
+      let isLoading = false;
+      let loadingComplete = false;
+
+      function syncButtonState() {
+        const isChecked = confirmBox.checked;
+        decryptButton.disabled = !isChecked || (isLoading && !loadingComplete);
+        decryptButton.classList.toggle('active', isChecked && (!isLoading || loadingComplete));
+      }
+
+      confirmBox.addEventListener('change', syncButtonState);
+      syncButtonState();
+
+      decryptButton.addEventListener('click', function () {
+        // If loading is complete, redirect to requirement.html
+        if (loadingComplete) {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          loadingOverlay.style.display = 'flex';
+          loadingOverlay.classList.add('active');
+          setTimeout(() => {
+            window.location.href = 'requirement.html';
+          }, 4000);
+          return;
+        }
+        
+        // If already loading, do nothing
+        if (isLoading) return;
+        
+        isLoading = true;
+        loadingComplete = false;
+        syncButtonState();
+        
+        // Show loading container
+        loadingContainer.classList.add('active');
+        completionMessage.classList.remove('show');
+        loadingProgress.style.animation = 'none';
+        
+        // Trigger reflow to restart animation
+        void loadingProgress.offsetWidth;
+        loadingProgress.style.animation = 'loadingProgress 60s linear forwards';
+        
+        // After 60 seconds, show completion message
+        setTimeout(() => {
+          completionMessage.classList.add('show');
+          isLoading = false;
+          loadingComplete = true;
+          syncButtonState();
+        }, 60000);
+      });
+
+      // Hide loading overlay on page load
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const loadingOverlay = document.getElementById('loadingOverlay');
+          if (loadingOverlay) {
+            loadingOverlay.classList.add('hidden');
+            setTimeout(() => {
+              loadingOverlay.style.display = 'none';
+            }, 500);
+          }
+        }, 1200); // Show for 1.2 seconds before hiding
+      });
+    </script>
+  </body>
+</html>

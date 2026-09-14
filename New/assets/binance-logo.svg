@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 90" role="img" aria-label="Binance logo">
+  <defs>
+    <linearGradient id="binanceGrad" x1="0" x2="1">
+      <stop offset="0%" stop-color="#f3ba2f"/>
+      <stop offset="100%" stop-color="#d6a329"/>
+    </linearGradient>
+  </defs>
+  <rect width="280" height="90" rx="18" fill="#0b111b"/>
+  <g transform="translate(22 18)">
+    <path d="M16 18 L32 2 L48 18 L38 28 L32 22 L26 28 Z" fill="url(#binanceGrad)"/>
+    <path d="M16 38 L32 22 L48 38 L38 48 L32 42 L26 48 Z" fill="url(#binanceGrad)" opacity="0.92"/>
+    <path d="M32 52 L48 36 L64 52 L48 68 Z" fill="url(#binanceGrad)" opacity="0.85"/>
+    <path d="M32 22 L48 38 L32 54 L16 38 Z" fill="none" stroke="url(#binanceGrad)" stroke-width="3" opacity="0.7"/>
+  </g>
+  <text x="108" y="54" font-family="Arial, Helvetica, sans-serif" font-size="32" font-weight="700" letter-spacing="1.5" fill="#f5d77a">BINANCE</text>
+</svg>

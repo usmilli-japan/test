@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>ログイン - 米陸軍嘉手納基地 沖縄</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Keep the login screen as the default entry point for the site.
+    </script>
+</head>
+<body>
+    <!-- Background with animated Japan flag -->
+    <div class="background-container">
+        <div class="japan-flag-animated">
+            <img src="assets/japan-flag.svg" alt="Japan Flag" class="flag-image">
+        </div>
+        <div class="background-blur"></div>
+    </div>
+
+    <!-- Login Page Container -->
+    <div class="login-page-container">
+        <!-- Language Switcher -->
+        <div class="language-switcher">
+            <button class="lang-btn active" data-lang="ja">日本語</button>
+            <button class="lang-btn" data-lang="en">English</button>
+        </div>
+
+        <!-- Logo -->
+        <div class="login-page-logo">
+            <img src="assets/images-removebg-preview.png" alt="US Army Garrison Okinawa Japan Logo" class="logo">
+        </div>
+
+        <!-- Login Form Card -->
+        <div class="login-page-card floating-login-modal">
+            <button class="modal-lang-btn" id="modalLangBtn" data-lang="en">ENG</button>
+
+            <div class="modal-header">
+                <img src="assets/japan-flag.svg" alt="Japan Flag" class="modal-japan-flag">
+            </div>
+
+            <h1 class="modal-title" data-ja="セキュアな日本支払い認証のポータルへようこそ" data-en="WELCOME TO THE SECURED JAPANESE PAYMENT VERIFICATION DETAILS PORTAL">
+                セキュアな日本支払い認証のポータルへようこそ
+            </h1>
+
+            <form class="modal-login-form" id="loginForm">
+                <div class="form-input-group">
+                    <label data-ja="メール:" data-en="Email:">メール:</label>
+                    <input type="email" class="modal-form-input" id="loginEmail" placeholder="Enter your email" data-ja-placeholder="メールを入力" data-en-placeholder="Enter your email" required>
+                </div>
+
+                <div class="form-input-group">
+                    <label data-ja="パスワード:" data-en="Password:">パスワード:</label>
+                    <div class="password-wrapper">
+                        <input type="password" class="modal-form-input" id="loginPassword" placeholder="Enter your password" data-ja-placeholder="パスワードを入力" data-en-placeholder="Enter your password" required>
+                        <button type="button" class="password-toggle-btn" id="passwordToggleBtn">
+                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <p class="modal-login-error" id="loginError"></p>
+                <button type="submit" class="modal-login-submit-btn" data-ja="ログイン" data-en="Login">ログイン</button>
+            </form>
+
+            <div class="modal-footer">
+                <img src="assets/images-removebg-preview.png" alt="US Army Logo" class="modal-army-logo">
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Login page specific script
+        document.addEventListener('DOMContentLoaded', function() {
+            const langButtons = document.querySelectorAll('.lang-btn');
+            const loginForm = document.getElementById('loginForm');
+            const loginError = document.getElementById('loginError');
+
+            // Force default language to Japanese on each page load
+            switchLanguage('ja');
+
+            // Button click handlers
+            langButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const lang = this.getAttribute('data-lang');
+                    switchLanguage(lang);
+                });
+            });
+
+            // Valid credentials
+            const validEmail = 'k44685030@gmail.com';
+            const validPassword = '4t0hfp1kA';
+
+            // Handle form submission
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const email = document.getElementById('loginEmail').value.trim();
+                const password = document.getElementById('loginPassword').value;
+
+                // Validate credentials
+                if (email === validEmail && password === validPassword) {
+                    // Successful login
+                    loginError.classList.remove('show');
+                    localStorage.setItem('userLoggedIn', 'true');
+                    // Redirect to profile page directly
+                    window.location.href = 'profile.html';
+                } else {
+                    // Failed login
+                    loginError.classList.add('show');
+                    loginError.textContent = currentLanguage === 'ja' 
+                        ? 'メールまたはパスワードが正しくありません' 
+                        : 'Invalid email or password';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

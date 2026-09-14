@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 90" role="img" aria-label="Blockchain logo">
+  <rect width="280" height="90" rx="18" fill="#081521"/>
+  <g transform="translate(16 18)">
+    <circle cx="18" cy="18" r="10" fill="#3ba4ff"/>
+    <circle cx="32" cy="18" r="10" fill="#73d1ff"/>
+    <circle cx="46" cy="18" r="10" fill="#3ba4ff"/>
+    <path d="M8 35 C18 25, 30 25, 40 35" fill="none" stroke="#7ee7d6" stroke-width="4" stroke-linecap="round"/>
+    <path d="M12 8 C20 0, 32 0, 40 8" fill="none" stroke="#7ee7d6" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="90" y="54" font-family="Arial, Helvetica, sans-serif" font-size="25" font-weight="700" letter-spacing="1.5" fill="#ebf6ff">BLOCKCHAIN</text>
+</svg>

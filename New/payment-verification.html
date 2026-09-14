@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>支払い確認 - コインシールド</title>
+    <style>
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            width: 100%;
+            min-height: 100%;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #111827;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        html::-webkit-scrollbar, body::-webkit-scrollbar {
+            display: none;
+        }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 32px 16px;
+        }
+
+        .container {
+            width: min(900px, 100%);
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        .header-text {
+            margin: 0;
+            font-size: clamp(1.8rem, 3vw, 2.4rem);
+            line-height: 1.3;
+            letter-spacing: 0.06em;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .verification-panel {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px rgba(15, 23, 42, 0.06), 0 10px 20px rgba(15, 23, 42, 0.08);
+            border: 1px solid #e2e8f0;
+            padding: 40px;
+            animation: fadeIn 0.6s ease-out 0.1s both;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 28px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .status-badge.approved {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+
+        .amount-info {
+            margin-bottom: 32px;
+            padding: 16px;
+            background: #f0f9ff;
+            border-left: 4px solid #0284c7;
+            border-radius: 8px;
+        }
+
+        .amount-info-label {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #0c4a6e;
+            margin-bottom: 8px;
+        }
+
+        .amount-info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0c4a6e;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            margin-bottom: 32px;
+        }
+
+        .upload-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 16px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+        }
+
+        .drop-zone:hover {
+            border-color: #0284c7;
+            background: #f0f9ff;
+        }
+
+        .drop-zone.dragover {
+            border-color: #10b981;
+            background: #d1fae5;
+        }
+
+        .drop-zone p {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #475569;
+        }
+
+        .drop-zone input[type="file"] {
+            display: none;
+        }
+
+        .file-accepted-info {
+            font-size: 12px;
+            color: #64748b;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            padding: 12px;
+            background: #f0fdf4;
+            border: 1px solid #dcfce7;
+            border-radius: 8px;
+        }
+
+        .file-item-icon {
+            font-size: 20px;
+        }
+
+        .file-item-info {
+            flex: 1;
+            text-align: left;
+        }
+
+        .file-item-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #166534;
+        }
+
+        .file-item-meta {
+            font-size: 12px;
+            color: #15803d;
+            margin-top: 2px;
+        }
+
+        .file-item-remove {
+            cursor: pointer;
+            color: #dc2626;
+            font-weight: 700;
+            font-size: 18px;
+        }
+
+        /* Review Section */
+        .review-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 12px;
+        }
+
+        .review-section h3 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #1e40af;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .review-status {
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 12px;
+        }
+
+        .refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: #0284c7;
+            font-weight: 600;
+        }
+
+        .spinner-small {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #0284c7;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Approval Section */
+        .approval-section {
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            border-radius: 12px;
+        }
+
+        .approval-section h3 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: #166534;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .approval-detail {
+            font-size: 13px;
+            color: #166534;
+            margin-bottom: 8px;
+            line-height: 1.6;
+        }
+
+        .approval-detail strong {
+            font-weight: 700;
+        }
+
+        /* Button Styles */
+        .finalize-button {
+            width: 100%;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 16px;
+        }
+
+        .finalize-button.locked {
+            background: #cbd5e1;
+            color: #64748b;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .finalize-button.enabled {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .finalize-button.enabled:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25);
+        }
+
+        .finalize-button.enabled:active {
+            transform: translateY(0);
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(23, 31, 44, 0.85));
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .loading-glass-box {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 20px;
+            border: 4px solid rgba(96, 165, 250, 0.2);
+            border-top: 4px solid #60a5fa;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            color: rgba(191, 219, 254, 0.95);
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        /* Confirmation Modal */
+        .confirmation-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .confirmation-overlay.active {
+            display: flex;
+        }
+
+        .confirmation-modal {
+            background: linear-gradient(135deg, rgba(12, 18, 29, 0.95), rgba(23, 31, 44, 0.95));
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(2, 6, 23, 0.9);
+            animation: fadeInPopup 0.4s ease-out;
+            min-width: 300px;
+        }
+
+        .checkmark-circle {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+
+        .checkmark-circle::after {
+            content: "✓";
+            color: #ffffff;
+            font-size: 48px;
+            font-weight: 700;
+        }
+
+        .confirmation-text {
+            color: rgba(191, 219, 254, 0.95);
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeInPopup {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes fadeOutPopup {
+            from {
+                opacity: 1;
+                transform: scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+        }
+
+        .confirmation-modal.fade-out {
+            animation: fadeOutPopup 0.4s ease-in forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Confirmation Popup Overlay -->
+    <div id="confirmationOverlay" class="confirmation-overlay">
+        <div class="confirmation-modal" id="confirmationModal">
+            <div class="checkmark-circle"></div>
+            <div class="confirmation-text">コインシールドが無効化されました</div>
+        </div>
+    </div>
+
+    <!-- Loading Screen Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-glass-box">
+            <div class="spinner"></div>
+            <div class="loading-text">無効化を完了しています...</div>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1 class="header-text">支払い確認</h1>
+        </header>
+
+        <div class="verification-panel">
+            <!-- Status Badge (Hidden until file uploaded) -->
+            <div class="status-badge pending" id="statusBadge" style="display: none;">
+                <span id="statusIcon">⏳</span>
+                <span id="statusText">管理者の確認待ち</span>
+            </div>
+
+            <!-- Amount Info -->
+            <div class="amount-info">
+                <div class="amount-info-label">必要額</div>
+                <div class="amount-info-value" id="amountRequired">210,000円 (0.635%)</div>
+            </div>
+
+            <!-- Upload Section (Initially shown) -->
+            <div class="upload-section" id="uploadSection">
+                <h3>支払い証明をアップロード</h3>
+                <div class="drop-zone" id="dropZone">
+                    <p>ドラッグ＆ドロップ、またはクリックして選択</p>
+                    <div class="file-accepted-info">対応形式: JPG、PNG、PDF (最大5MB)</div>
+                    <input type="file" id="fileInput" accept="image/*,.pdf">
+                </div>
+            </div>
+
+            <!-- File Uploaded Display -->
+            <div id="fileUploadedDisplay" style="display: none;">
+                <div class="file-item" id="uploadedFileItem">
+                    <div class="file-item-icon">📄</div>
+                    <div class="file-item-info">
+                        <div class="file-item-name" id="uploadedFileName">receipt.jpg</div>
+                        <div class="file-item-meta" id="uploadedFileTime">アップロード: 14:45:00</div>
+                    </div>
+                    <div class="file-item-remove" id="removeFileBtn" style="cursor: not-allowed; opacity: 0.5;" title="Cannot remove after upload">✕</div>
+                </div>
+            </div>
+
+            <!-- Review Pending Section (Shown after upload) -->
+            <div class="review-section" id="reviewSection" style="display: none;">
+                <h3>管理者の確認待ち</h3>
+                <div class="review-status">
+                    <span class="refresh-indicator">
+                        <span class="spinner-small"></span>
+                        承認を確認しています...
+                    </span>
+                </div>
+                <p style="font-size: 12px; color: #0284c7; margin: 8px 0 0 0;">
+                    確認予定時間: 15～30分
+                </p>
+            </div>
+
+            <!-- Approval Section (Shown after admin approves) -->
+            <div class="approval-section" id="approvalSection" style="display: none;">
+                <h3>✓ 支払いが確認されました</h3>
+                <div class="approval-detail">
+                    <strong>承認時刻:</strong> <span id="approvalTime">14:52:35</span>
+                </div>
+                <div class="approval-detail">
+                    <strong>状態:</strong> <span id="adminComment">支払い確認済み</span>
+                </div>
+            </div>
+
+            <!-- Finalize Button -->
+            <button class="finalize-button locked" id="finalizeBtn" disabled>
+                ✗ 無効化を完了 (ロック中)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById("fileInput");
+        const dropZone = document.getElementById("dropZone");
+        const uploadSection = document.getElementById("uploadSection");
+        const fileUploadedDisplay = document.getElementById("fileUploadedDisplay");
+        const reviewSection = document.getElementById("reviewSection");
+        const approvalSection = document.getElementById("approvalSection");
+        const finalizeBtn = document.getElementById("finalizeBtn");
+        const statusBadge = document.getElementById("statusBadge");
+        const statusIcon = document.getElementById("statusIcon");
+        const statusText = document.getElementById("statusText");
+        const confirmationOverlay = document.getElementById("confirmationOverlay");
+        const confirmationModal = document.getElementById("confirmationModal");
+        const loadingOverlay = document.getElementById("loadingOverlay");
+
+        let autoRefreshInterval = null;
+        let uploadedFileName = "";
+        
+        // Get user name from localStorage (set in details.html confirmation)
+        const userName = localStorage.getItem("userFullName") || "Koichi Ikeda";
+
+        // Initialize on page load - restore UI state if file was already uploaded
+        function initializePageState() {
+            const paymentStatus = localStorage.getItem("paymentStatus");
+            const uploadedFile = localStorage.getItem("uploadedFileName");
+            const uploadedTime = localStorage.getItem("uploadedFileTime");
+            
+            if (paymentStatus === "PENDING" && uploadedFile) {
+                // File was already uploaded - restore the UI
+                uploadSection.style.display = "none";
+                fileUploadedDisplay.style.display = "block";
+                statusBadge.style.display = "block"; // Show status badge
+                document.getElementById("uploadedFileName").textContent = uploadedFile;
+                document.getElementById("uploadedFileTime").textContent = `Uploaded: ${uploadedTime}`;
+                reviewSection.style.display = "block";
+                startAutoRefresh();
+            } else if (paymentStatus === "APPROVED") {
+                // Payment was already approved - show approval section
+                statusBadge.style.display = "block"; // Show status badge
+                checkPaymentApproval();
+            }
+        }
+
+        // Run initialization on page load
+        window.addEventListener("load", initializePageState);
+
+        // File Upload Handlers
+        dropZone.addEventListener("click", () => fileInput.click());
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("dragover");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragover");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("dragover");
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener("change", (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        async function handleFileSelect(file) {
+            // Validate file size
+            if (file.size > 5 * 1024 * 1024) {
+                alert("ファイルサイズが5MBを超えています。小さいファイルを選択してください。");
+                return;
+            }
+
+            uploadedFileName = file.name;
+            const now = new Date();
+            // Use user's local timezone
+            const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+            const fileData = file.type.startsWith("image/")
+                ? await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                })
+                : "";
+
+            const newPayment = {
+                userName: userName,
+                userEmail: localStorage.getItem("userEmail") || "user@example.com",
+                amount: localStorage.getItem("calculatedAmount") || "33,072,003.16 Yen",
+                fileName: file.name,
+                fileType: file.type,
+                fileData: fileData,
+                fileSize: (file.size / 1024 / 1024).toFixed(2) + " MB",
+                uploadTime: timeStr,
+                status: "PENDING",
+                uploadDate: new Date().toISOString().split('T')[0],
+                submittedAt: new Date().toISOString(),
+                source: "user-side"
+            };
+
+            const apiBase = `${window.location.protocol}//${window.location.hostname}:3001`;
+
+            try {
+                const response = await fetch(`${apiBase}/api/payments`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(newPayment)
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to save payment");
+                }
+            } catch (error) {
+                console.error("API save failed, falling back to localStorage:", error);
+                const adminPayments = JSON.parse(localStorage.getItem("adminPayments") || "[]");
+                const paymentId = adminPayments.length + 1;
+                const fallbackPayment = { id: paymentId, ...newPayment };
+                adminPayments.push(fallbackPayment);
+                localStorage.setItem("adminPayments", JSON.stringify(adminPayments));
+                localStorage.setItem("coinShieldSubmission", JSON.stringify({ ...fallbackPayment, source: "user-side" }));
+            }
+
+            // Save upload info to localStorage
+            localStorage.setItem("uploadedFileName", file.name);
+            localStorage.setItem("uploadedFileTime", timeStr);
+            localStorage.setItem("paymentStatus", "PENDING");
+            localStorage.setItem("userFullName", userName); // Save user name
+
+            // Update UI
+            uploadSection.style.display = "none";
+            fileUploadedDisplay.style.display = "block";
+            statusBadge.style.display = "block"; // Show status badge after upload
+            document.getElementById("uploadedFileName").textContent = file.name;
+                document.getElementById("uploadedFileTime").textContent = `アップロード: ${timeStr}`;
+            reviewSection.style.display = "block";
+
+            // Start auto-refresh
+            startAutoRefresh();
+        }
+
+        function startAutoRefresh() {
+            if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+            
+            autoRefreshInterval = setInterval(() => {
+                checkPaymentApproval();
+            }, 5000);
+
+            // Also check immediately
+            checkPaymentApproval();
+        }
+
+        function checkPaymentApproval() {
+            const paymentStatus = localStorage.getItem("paymentStatus");
+
+            if (paymentStatus === "APPROVED") {
+                // Stop auto-refresh
+                if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+
+                // Update UI to show approval
+                reviewSection.style.display = "none";
+                approvalSection.style.display = "block";
+
+                // Get approval time from localStorage and convert to user's timezone
+                const approvalTime = localStorage.getItem("approvalTime") || new Date().toLocaleTimeString();
+                const adminComment = localStorage.getItem("adminComment") || "支払い確認済み";
+
+                document.getElementById("approvalTime").textContent = approvalTime;
+                document.getElementById("adminComment").textContent = adminComment;
+
+                // Update status badge
+                statusBadge.className = "status-badge approved";
+                statusIcon.textContent = "✓";
+                statusText.textContent = "支払いが承認されました";
+
+                // Unlock button
+                finalizeBtn.classList.remove("locked");
+                finalizeBtn.classList.add("enabled");
+                finalizeBtn.disabled = false;
+                finalizeBtn.textContent = "✓ 無効化を完了";
+            }
+        }
+
+        // Remove file button
+        document.getElementById("removeFileBtn").addEventListener("click", () => {
+            // Don't allow removal - file is locked once uploaded
+            alert("アップロード後は支払い証明を削除できません。変更が必要な場合はサポートに連絡してください。");
+        });
+
+        // Finalize Deactivation Button
+        finalizeBtn.addEventListener("click", () => {
+            const confirmationOverlay = document.getElementById("confirmationOverlay");
+            const confirmationModal = document.getElementById("confirmationModal");
+            const loadingOverlay = document.getElementById("loadingOverlay");
+
+            // Show the confirmation popup
+            confirmationOverlay.classList.add("active");
+
+            // After 4 seconds, fade out confirmation and show loading
+            setTimeout(() => {
+                confirmationModal.classList.add("fade-out");
+                setTimeout(() => {
+                    confirmationOverlay.classList.remove("active");
+                    // Show loading screen
+                    loadingOverlay.classList.add("active");
+                    // After 4 more seconds, redirect
+                    setTimeout(() => {
+                        // Set flag to indicate coin shield is deactivated
+                        localStorage.setItem("coinShieldStatus", "DEACTIVATED");
+                        localStorage.setItem("deactivationDate", new Date().toLocaleString());
+                        localStorage.removeItem("paymentStatus");
+                        window.location.replace("/profile.html");
+                    }, 4000);
+                }, 400);
+            }, 4000);
+        });
+    </script>
+</body>
+</html>

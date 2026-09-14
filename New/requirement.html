@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>コインシールド要件</title>
+    <style>
+      * { box-sizing: border-box; }
+
+      html, body {
+        margin: 0;
+        width: 100%;
+        min-height: 100%;
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: #111827;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+
+      html::-webkit-scrollbar,
+      body::-webkit-scrollbar {
+        display: none;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 32px 16px;
+      }
+
+      .container {
+        width: min(900px, 100%);
+        margin: 0 auto;
+      }
+
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+        animation: slideDown 0.5s ease-out;
+      }
+
+      .header-text {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        line-height: 1.3;
+        letter-spacing: 0.06em;
+        font-weight: 800;
+        text-transform: uppercase;
+        color: #0f172a;
+        background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .requirements-panel {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 4px 6px rgba(15, 23, 42, 0.06), 0 10px 20px rgba(15, 23, 42, 0.08);
+        border: 1px solid #e2e8f0;
+        padding: 40px;
+        animation: fadeIn 0.6s ease-out 0.1s both;
+      }
+
+      .amount-section {
+        margin-bottom: 32px;
+        visibility: visible;
+        opacity: 1;
+      }
+
+      .amount-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .amount-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin-bottom: 10px;
+        text-align: left;
+      }
+
+      .amount-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: #0f172a;
+        padding: 16px 0;
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 50px;
+      }
+
+      .amount-value span {
+        color: #0f172a;
+        font-weight: 700;
+      }
+
+      .amount-value .placeholder {
+        color: #cbd5e1;
+        font-weight: 500;
+      }
+
+      .calculate-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 20px;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .calculate-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(15, 23, 42, 0.25);
+      }
+
+      .calculate-button:active {
+        transform: translateY(0);
+      }
+
+      .calculate-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .calculate-button:disabled:hover {
+        transform: none;
+        box-shadow: none;
+      }
+
+      .info-box {
+        margin-top: 28px;
+        padding: 20px;
+        background: #f0f9ff;
+        border-left: 4px solid #0284c7;
+        border-radius: 12px;
+        font-size: 14px;
+        line-height: 1.7;
+        color: #0c4a6e;
+      }
+
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes slideInFromLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      @keyframes slideOutToRight {
+        from {
+          opacity: 1;
+          transform: translateX(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateX(30px);
+        }
+      }
+
+      @keyframes tokenSpinner {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .token-loading-spinner {
+        width: 24px;
+        height: 24px;
+        border: 3px solid #e2e8f0;
+        border-top: 3px solid #0284c7;
+        border-radius: 50%;
+        animation: tokenSpinner 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      .slide-in {
+        animation: slideInFromLeft 0.6s ease-out;
+      }
+
+      .slide-out {
+        animation: slideOutToRight 0.6s ease-out forwards;
+      }
+
+      @keyframes fadeInContent {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      #submissionDetailsSection.reveal {
+        animation: fadeInContent 1s ease-out forwards;
+      }
+
+      @keyframes fadeInPopup {
+        from {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+
+      @keyframes fadeOutPopup {
+        from {
+          opacity: 1;
+          transform: scale(1);
+        }
+        to {
+          opacity: 0;
+          transform: scale(0.9);
+        }
+      }
+
+      .confirmation-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .confirmation-overlay.active {
+        display: flex;
+      }
+
+      .confirmation-modal {
+        background: linear-gradient(135deg, rgba(12, 18, 29, 0.95), rgba(23, 31, 44, 0.95));
+        border: 1px solid rgba(16, 185, 129, 0.4);
+        border-radius: 20px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 24px 60px rgba(2, 6, 23, 0.9);
+        animation: fadeInPopup 0.4s ease-out;
+        min-width: 300px;
+      }
+
+      .confirmation-modal.fade-out {
+        animation: fadeOutPopup 0.4s ease-in forwards;
+      }
+
+      .checkmark-circle {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 24px;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+      }
+
+      .checkmark-circle::after {
+        content: "✓";
+        color: #ffffff;
+        font-size: 48px;
+        font-weight: 700;
+      }
+
+      .confirmation-text {
+        color: rgba(191, 219, 254, 0.95);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      /* Loading Screen */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes fadeInLoading {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      @keyframes fadeOutLoading {
+        from { opacity: 1; }
+        to { opacity: 0; }
+      }
+
+      .loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(23, 31, 44, 0.85));
+        backdrop-filter: blur(8px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 9998;
+        animation: fadeInLoading 0.3s ease-out;
+      }
+
+      .loading-overlay.active {
+        display: flex;
+      }
+
+      .loading-overlay.hidden {
+        animation: fadeOutLoading 0.5s ease-out forwards;
+      }
+
+      .loading-glass-box {
+        padding: 0;
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        box-shadow: none;
+        min-width: auto;
+      }
+
+      .spinner {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto;
+        border: 4px solid rgba(96, 165, 250, 0.2);
+        border-top: 4px solid #60a5fa;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      .loading-text {
+        color: rgba(191, 219, 254, 0.95);
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Confirmation Popup Overlay -->
+    <div id="confirmationOverlay" class="confirmation-overlay">
+      <div class="confirmation-modal" id="confirmationModal">
+        <div class="checkmark-circle"></div>
+        <div class="confirmation-text">Coin Shield Deactivated</div>
+      </div>
+    </div>
+
+    <!-- Loading Screen Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-glass-box">
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1 class="header-text">コインシールド無効化要件</h1>
+      </header>
+
+      <div class="requirements-panel">
+        <div class="amount-section">
+          <label class="amount-label">無効化予定額</label>
+          <div class="amount-value">
+            <span>31,498,098.25円</span>
+          </div>
+        </div>
+
+        <div class="amount-section">
+          <label class="amount-label">無効化特典適用後の合計額</label>
+          <div class="amount-value">
+            <span id="totalAmount" class="placeholder">—</span>
+          </div>
+        </div>
+
+        <button type="button" class="calculate-button" id="calculateButton">
+          ✓ 合計を計算
+        </button>
+
+        <button type="button" class="calculate-button" id="decryptButton" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); margin-top: 12px;" disabled>
+          🔓 復号を開始.....
+        </button>
+
+        <div id="submissionDetailsSection" style="display: none; margin-top: 32px; width: 380px; margin-left: auto; margin-right: auto;">
+          <div style="font-size: 14px; font-weight: 700; color: #0f172a; text-align: center; margin-bottom: 20px;">
+            無効化合計額: 33,072,003.16円
+          </div>
+
+          <!-- BNB Display Box -->
+          <div style="width: 100%; height: 50px; border: 2px solid #0284c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; background: #ffffff;">
+            <div style="text-align: center;">
+              <span id="requirementText" style="font-size: 13px; color: #0c4a6e; opacity: 0.5;">計算をクリックして要件を表示</span>
+              <div id="requirementValue" style="display: none;">
+                <div style="font-size: 16px; font-weight: 700; color: #0c4a6e;">BNB 210,000円相当 (0.635%)</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calculate Requirement Button -->
+          <button type="button" style="padding: 6px 12px; background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: #ffffff; font-size: 12px; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; margin-bottom: 24px; display: block; margin-left: auto; margin-right: auto;" id="calculateRequirementBtn">
+            要件を計算
+          </button>
+
+          <!-- Proceed with requirement submission details -->
+          <div style="font-size: 14px; font-weight: 700; color: #0f172a; margin-bottom: 16px;">
+            要件提出の詳細へ進む
+          </div>
+
+          <!-- Submission Address -->
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #64748b; margin-bottom: 6px;">提出先アドレス</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="walletAddress" value="0x6342be958F23B937371ba8d488BC8128E8ace8eE" style="flex: 1; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; color: #0f172a; font-family: monospace;" readonly />
+              <button type="button" id="copyButton" style="padding: 8px 12px; background: #f5f5f5; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">📋 コピー</button>
+            </div>
+          </div>
+
+          <!-- Deactivation Summary -->
+          <div style="margin-bottom: 16px; padding: 16px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 8px;">
+            <div style="font-size: 13px; color: #166534; margin-bottom: 12px;">
+              <strong>✓ 無効化の概要:</strong>
+            </div>
+            <ul style="margin: 0; padding-left: 20px; font-size: 12px; color: #166534; line-height: 1.8;">
+              <li>加算される特典: 1,573,904.84円</li>
+              <li>処理時間: 24時間</li>
+              <li>次の手順: 確認のため支払い証明をアップロード</li>
+              <li>管理者が支払いを確認して承認します</li>
+            </ul>
+          </div>
+
+          <!-- Confirm Deactivation Button -->
+          <button type="button" id="confirmDeactivationBtn" style="width: 100%; padding: 12px 24px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; border: none; border-radius: 8px; cursor: pointer; margin-top: 8px; display: none;">
+            確認して支払い確認へ進む
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Check if coin shield is deactivated
+      window.addEventListener('load', function() {
+        if (localStorage.getItem("coinShieldStatus") === "DEACTIVATED") {
+          alert("コインシールドが無効化されました。プロフィールページに戻ってください。");
+          window.location.replace("/profile.html");
+          return;
+        }
+      });
+
+      let decryptionTimer;
+
+      // Restore amount from localStorage on page load
+      window.addEventListener("load", function () {
+        const savedAmount = localStorage.getItem("calculatedAmount");
+        if (savedAmount) {
+          const element = document.getElementById("totalAmount");
+          const calculateBtn = document.getElementById("calculateButton");
+          
+          element.textContent = savedAmount;
+          element.classList.remove("placeholder");
+          
+          // Keep calculate button disabled
+          calculateBtn.disabled = true;
+          calculateBtn.style.opacity = "0.5";
+          calculateBtn.style.cursor = "not-allowed";
+          
+          // Enable the decryption button
+          document.getElementById("decryptButton").disabled = false;
+        }
+      }, true);
+
+      document.getElementById("calculateButton").addEventListener("click", function () {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const element = document.getElementById("totalAmount");
+        const calculateBtn = document.getElementById("calculateButton");
+        
+        // Show loading screen
+        loadingOverlay.classList.add('active');
+        
+        // After 2.5 seconds, display the amount and hide loading
+        setTimeout(() => {
+          const amount = "33,072,003.16 Yen";
+          element.textContent = amount;
+          element.classList.remove("placeholder");
+          
+          // Save amount to localStorage so it persists after decryption
+          localStorage.setItem("calculatedAmount", amount);
+          
+          // Hide loading screen
+          loadingOverlay.classList.remove('active');
+          
+          // Disable the calculate button after calculating
+          calculateBtn.disabled = true;
+          calculateBtn.style.opacity = "0.5";
+          calculateBtn.style.cursor = "not-allowed";
+          
+          // Enable the decryption button
+          document.getElementById("decryptButton").disabled = false;
+        }, 2500);
+      });
+
+      // Decrypt button - Redirect to timer.html
+      document.getElementById("decryptButton").addEventListener("click", function () {
+        // Set flag to show submission details when returning
+        localStorage.setItem("showSubmissionDetails", "true");
+        
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        loadingOverlay.classList.add('active');
+        
+        // Redirect to timer.html after 4 seconds
+        setTimeout(() => {
+          window.location.href = "timer.html";
+        }, 4000);
+      });
+
+      // Check if returning from timer and show submission details
+      window.addEventListener("load", function () {
+        if (localStorage.getItem("showSubmissionDetails") === "true") {
+          const submissionDetailsSection = document.getElementById("submissionDetailsSection");
+          const decryptButton = document.getElementById("decryptButton");
+          const calculateButton = document.getElementById("calculateButton");
+          const totalAmountElement = document.getElementById("totalAmount");
+          const savedAmount = localStorage.getItem("calculatedAmount");
+          
+          submissionDetailsSection.style.display = "block";
+          submissionDetailsSection.classList.add("reveal");
+          
+          // Ensure amount is displayed and remains visible
+          if (savedAmount && totalAmountElement.classList.contains("placeholder")) {
+            totalAmountElement.textContent = savedAmount;
+            totalAmountElement.classList.remove("placeholder");
+          }
+          
+          // Disable both buttons after timer completes
+          decryptButton.disabled = true;
+          decryptButton.style.opacity = "0.5";
+          decryptButton.style.cursor = "not-allowed";
+          
+          calculateButton.disabled = true;
+          calculateButton.style.opacity = "0.5";
+          calculateButton.style.cursor = "not-allowed";
+          
+          // Clear the flag
+          localStorage.removeItem("showSubmissionDetails");
+        }
+      });
+
+      document.getElementById("copyButton").addEventListener("click", function () {
+        const walletAddress = document.getElementById("walletAddress");
+        walletAddress.select();
+        document.execCommand("copy");
+        
+        // Show feedback
+        const originalText = this.textContent;
+        this.textContent = "✓ Copied!";
+        setTimeout(() => {
+          this.textContent = originalText;
+        }, 2000);
+      });
+
+      // After requirement is calculated, show the confirm button
+      document.getElementById("calculateRequirementBtn").addEventListener("click", function () {
+        const requirementText = document.getElementById("requirementText");
+        const requirementValue = document.getElementById("requirementValue");
+        const confirmDeactivationBtn = document.getElementById("confirmDeactivationBtn");
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Show loading screen
+        loadingOverlay.classList.add('active');
+        
+        // After 5 seconds, display the BNB amount and show confirm button
+        setTimeout(() => {
+          requirementText.style.display = "none";
+          requirementValue.style.display = "block";
+          
+          // Show confirm deactivation button
+          confirmDeactivationBtn.style.display = "block";
+          confirmDeactivationBtn.classList.add("slide-in");
+          
+          // Hide loading screen
+          loadingOverlay.classList.remove('active');
+        }, 5000);
+      });
+
+      // Confirm Deactivation button handler - Redirect to payment-verification.html
+      const confirmDeactivationBtn = document.getElementById("confirmDeactivationBtn");
+      confirmDeactivationBtn.addEventListener("click", function () {
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Show loading screen
+        loadingOverlay.classList.add('active');
+        
+        // Redirect to payment-verification.html after 2 seconds
+        setTimeout(() => {
+          window.location.href = "payment-verification.html";
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>

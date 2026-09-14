@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>ユーザープロフィール - 米陸軍嘉手納基地 沖縄</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Profile Page Specific Styles */
+        body {
+            background: linear-gradient(135deg, #1a3a6f 0%, #2a4f8f 50%, #1e3f5a 100%);
+        }
+
+        .background-container {
+            display: none;
+        }
+
+        .profile-page-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .profile-page-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 40px;
+            box-sizing: border-box;
+        }
+
+        .profile-page-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.4));
+        }
+
+        .profile-page-title {
+            text-align: center;
+            flex: 1;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .visit-loader-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 14px;
+            background: rgba(10, 27, 52, 0.92);
+            color: #FFD700;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .visit-loader-overlay.active {
+            display: flex;
+        }
+
+        .visit-loader-spinner {
+            width: 42px;
+            height: 42px;
+            border: 4px solid rgba(255, 255, 255, 0.25);
+            border-top-color: #FFD700;
+            border-radius: 50%;
+            animation: visitLoaderSpin 0.8s linear infinite;
+        }
+
+        @keyframes visitLoaderSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        .profile-page-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-toggle {
+            padding: 8px 14px;
+            border: 1.5px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border-radius: 22px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 700;
+            transition: all 0.35s ease;
+            backdrop-filter: blur(15px);
+        }
+
+        .lang-toggle:hover {
+            background: rgba(255, 255, 255, 0.45);
+            border-color: white;
+        }
+
+        .lang-toggle.active {
+            background: rgba(188, 0, 45, 0.9);
+            border-color: white;
+        }
+
+        .profile-page-card {
+            background: linear-gradient(135deg, rgba(26, 58, 111, 0.95) 0%, rgba(42, 79, 143, 0.95) 50%, rgba(30, 63, 90, 0.95) 100%);
+            border-radius: 20px;
+            padding: 40px;
+            width: 100%;
+            max-width: 600px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            border: 2px solid rgba(255, 215, 0, 0.2);
+            margin-bottom: 30px;
+        }
+
+        .profile-page-picture {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid #FFD700;
+            object-fit: cover;
+            margin: 0 auto 30px;
+            display: block;
+            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        .profile-field {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .profile-field-label {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .profile-field-value {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .profile-field-value.gold {
+            color: #FFD700;
+            font-size: 18px;
+        }
+
+        .profile-page-actions-footer {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin-top: 30px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-back {
+            flex: 1;
+            padding: 12px 20px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-logout {
+            width: min(100%, 480px);
+            max-width: 480px;
+            margin: 0 auto;
+            align-self: center;
+            box-sizing: border-box;
+            padding: 12px 20px;
+            border: 2px solid #FF6B6B;
+            background: rgba(255, 107, 107, 0.2);
+            color: #FF6B6B;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: block;
+            text-align: center;
+        }
+
+        .btn-logout:hover {
+            background: rgba(255, 107, 107, 0.35);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .profile-page-container {
+                padding: 10px;
+            }
+
+            .profile-page-header {
+                padding: 15px 10px;
+                margin-bottom: 20px;
+            }
+
+            .profile-page-title {
+                font-size: 18px;
+            }
+
+            .profile-page-card {
+                padding: 25px;
+                border-radius: 15px;
+            }
+
+            .profile-page-picture {
+                width: 120px;
+                height: 120px;
+            }
+
+            .profile-field {
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .profile-field-value {
+                font-size: 14px;
+            }
+
+            .profile-page-actions-footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .logout-modal {
+                width: calc(100% - 20px);
+                padding: 20px;
+            }
+
+            .logout-modal-title {
+                font-size: 20px;
+            }
+
+            .logout-modal-message {
+                font-size: 14px;
+                margin-bottom: 20px;
+            }
+
+            .logout-modal-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .profile-page-header {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 10px;
+                padding: 12px 8px;
+            }
+
+            .profile-page-logo {
+                width: 56px;
+                height: 56px;
+            }
+
+            .profile-page-title {
+                order: 3;
+                flex: 0 0 100%;
+                font-size: 20px;
+                margin-top: 4px;
+            }
+
+            .profile-page-actions {
+                order: 2;
+            }
+
+            .lang-toggle {
+                padding: 7px 10px;
+                font-size: 11px;
+            }
+        }
+
+        @media (min-width: 481px) and (max-width: 1024px) {
+            .profile-page-container {
+                padding: 30px 20px;
+            }
+
+            .profile-page-card {
+                max-width: 650px;
+                padding: 35px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            .profile-page-container {
+                padding: 40px 20px;
+            }
+
+            .profile-page-card {
+                max-width: 700px;
+            }
+        }
+
+        /* Loading Bar Styles */
+        .loading-bar-container {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(183, 230, 66, 0.62);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .loading-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, rgba(183, 230, 66, 0.5) 0%, rgba(214, 245, 95, 0.9) 50%, rgba(165, 209, 44, 0.6) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            position: relative;
+            transition: width 0.03s linear;
+            box-shadow: 0 0 16px rgba(183, 230, 66, 0.55), inset 0 1px 3px rgba(255, 255, 255, 0.22);
+        }
+
+        .loading-bar-text {
+            color: white;
+            font-weight: 700;
+            font-size: 14px;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Gradient animation for loading bar */
+        @keyframes barGradient {
+            0% {
+                background: linear-gradient(90deg, rgba(183, 230, 66, 0.5) 0%, rgba(214, 245, 95, 0.9) 50%, rgba(165, 209, 44, 0.6) 100%);
+            }
+            50% {
+                background: linear-gradient(90deg, rgba(196, 237, 79, 0.58) 0%, rgba(227, 250, 132, 0.94) 50%, rgba(196, 237, 79, 0.58) 100%);
+            }
+            100% {
+                background: linear-gradient(90deg, rgba(183, 230, 66, 0.5) 0%, rgba(214, 245, 95, 0.9) 50%, rgba(165, 209, 44, 0.6) 100%);
+            }
+        }
+
+        .loading-bar.animate {
+            animation: barGradient 2s ease-in-out infinite;
+        }
+
+        .celebration-sticker {
+            display: inline-block;
+            margin-left: 8px;
+            transform-origin: center;
+        }
+
+        .celebration-sticker.animate-once {
+            animation: celebrationPop 10s ease-out 1;
+        }
+
+        @keyframes celebrationPop {
+            0% {
+                transform: scale(0.2) rotate(-28deg);
+                opacity: 0;
+            }
+            45% {
+                transform: scale(1.35) rotate(10deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 1;
+            }
+        }
+
+        .urgent-note-banner {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 12px 0;
+            padding: 10px 12px;
+            border: 2px solid rgba(255, 82, 82, 0.95);
+            border-radius: 10px;
+            background: linear-gradient(90deg, rgba(255, 71, 71, 0.25) 0%, rgba(255, 170, 0, 0.22) 100%);
+            box-shadow: 0 0 0 1px rgba(255, 82, 82, 0.35), 0 0 18px rgba(255, 82, 82, 0.35);
+            animation: urgentPulse 1.5s ease-in-out infinite;
+        }
+
+        .urgent-note-pill {
+            background: rgba(255, 240, 180, 0.15);
+            border: 1px solid rgba(255, 240, 180, 0.6);
+            color: #FFF0B4;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.9px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .urgent-note-text {
+            color: #FFFFFF;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            line-height: 1.35;
+        }
+
+        @keyframes urgentPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 0 1px rgba(255, 82, 82, 0.35), 0 0 18px rgba(255, 82, 82, 0.35);
+            }
+            50% {
+                transform: scale(1.01);
+                box-shadow: 0 0 0 2px rgba(255, 132, 0, 0.45), 0 0 24px rgba(255, 104, 104, 0.5);
+            }
+        }
+
+        /* Logout Confirmation Modal */
+        .logout-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .logout-modal-overlay.active {
+            display: flex;
+        }
+
+        .logout-modal {
+            background: linear-gradient(135deg, rgba(26, 58, 111, 0.95) 0%, rgba(42, 79, 143, 0.95) 100%);
+            border-radius: 16px;
+            padding: 30px;
+            max-width: 380px;
+            width: 90%;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.2);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            text-align: center;
+            animation: slideUp 0.3s ease;
+        }
+
+        .logout-modal-title {
+            color: #FFD700;
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 15px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .logout-modal-message {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin: 0 0 30px 0;
+            line-height: 1.5;
+        }
+
+        .logout-modal-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .logout-modal-btn {
+            padding: 12px 24px;
+            border: 2px solid rgba(255, 215, 0, 0.5);
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .logout-btn-yes {
+            background: linear-gradient(135deg, rgba(255, 100, 100, 0.3) 0%, rgba(255, 150, 150, 0.2) 100%);
+            color: #FF6B6B;
+            border-color: #FF6B6B;
+        }
+
+        .logout-btn-yes:hover {
+            background: linear-gradient(135deg, rgba(255, 100, 100, 0.45) 0%, rgba(255, 150, 150, 0.35) 100%);
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .logout-btn-no {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.15) 100%);
+            color: #FFD700;
+            border-color: #FFD700;
+        }
+
+        .logout-btn-no:hover {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.4) 0%, rgba(255, 215, 0, 0.25) 100%);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            transform: translateY(-2px);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="profile-page-container">
+        <!-- Header with Logo and Language Toggle -->
+        <div class="profile-page-header">
+            <img src="assets/images-removebg-preview.png" alt="Logo" class="profile-page-logo">
+            <h1 class="profile-page-title" data-ja="プロフィール" data-en="Profile">プロフィール</h1>
+            <div class="profile-page-actions">
+                <button class="lang-toggle active" data-lang="ja">日本語</button>
+                <button class="lang-toggle" data-lang="en">English</button>
+            </div>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="profile-page-card">
+            <img src="assets/profile-photo.jpg" alt="Profile Photo" class="profile-page-picture" onerror="this.src='assets/images-removebg-preview.png'">
+
+            <div class="profile-field">
+                <label class="profile-field-label" data-ja="名前:" data-en="Name:">名前:</label>
+                <p class="profile-field-value" data-ja="池田 浩一" data-en="MR. KOICHI IKEDA">MR. KOICHI IKEDA</p>
+            </div>
+
+            <div class="profile-field">
+                <label class="profile-field-label" data-ja="メール:" data-en="Email:">メール:</label>
+                <p class="profile-field-value">k44685030@gmail.com</p>
+            </div>
+
+            <div class="profile-field">
+                <label class="profile-field-label" data-ja="ステータス:" data-en="Status:">ステータス:</label>
+                <p class="profile-field-value" data-ja="ログイン済み" data-en="Logged In">ログイン済み</p>
+            </div>
+
+            <div class="profile-field">
+                <label class="profile-field-label" data-ja="(リスク利益):" data-en="(RISK BENEFIT):">(リスク利益):</label>
+                <p class="profile-field-value gold" data-ja="31,498,098.25円" data-en="31,498,098.25 YEN">31,498,098.25 YEN</p>
+            </div>
+
+            <!-- Verification Details Section -->
+            <div id="depositProcedureSection" style="background: rgba(255, 215, 0, 0.1); border: 2px solid rgba(255, 215, 0, 0.3); border-radius: 12px; padding: 20px; margin-top: 30px;">
+                
+                <!-- Contact Handler Text (info box) -->
+                <div style="margin-top: 20px; padding: 15px; background: rgba(255, 215, 0, 0.08); border-left: 3px solid #FFD700; border-radius: 8px;">
+                    <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 12px; line-height:1.4; font-weight: 600; text-align: center;"
+                       data-ja="詳細については、下のボタンをクリックしてBinanceウォレットの有効化をご確認ください。"
+                       data-en="Click the button below for more details concerning Binance Wallet Activation.">Click the button below for more details concerning Binance Wallet Activation.</p>
+                </div>
+                <!-- Note (red) placed between info box and contact button -->
+                <div class="verification-note-section" style="margin-top: 12px; padding: 10px 14px; background: rgba(0,0,0,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.03);">
+                    <p class="verification-note" data-ja="Binanceウォレットの有効化については、下のボタンをクリックしてください。" data-en="Click the button below for more details concerning Binance Wallet Activation." style="color:#ff4d4d; font-size:12px; line-height:1.4; font-weight:600; text-align:center; margin:0;">Click the button below for more details concerning Binance Wallet Activation.</p>
+                </div>
+
+                <!-- Contact Button -->
+                <a id="visitButton" href="New/index.html" target="_self" style="display: block; width: 100%; padding: 12px 20px; background: linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.15) 100%); border: 2px solid #FFD700; color: #FFD700; border-radius: 8px; text-align: center; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; margin-top: 15px; transition: all 0.3s ease;" data-ja="訪問" data-en="Visit" onmouseover="this.style.background='linear-gradient(135deg, rgba(255, 215, 0, 0.4) 0%, rgba(255, 215, 0, 0.25) 100%)'; this.style.boxShadow='0 0 20px rgba(255, 215, 0, 0.5)';" onmouseout="this.style.background='linear-gradient(135deg, rgba(255, 215, 0, 0.3) 0%, rgba(255, 215, 0, 0.15) 100%)'; this.style.boxShadow='none';">Visit</a>
+                </div>
+            </div>
+        </div>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+        <!-- Action Buttons -->
+        <div class="profile-page-actions-footer">
+            <button class="btn-logout" id="logoutBtn" data-ja="ログアウト" data-en="Logout">ログアウト</button>
+        </div>
+
+        <!-- Logout Confirmation Modal -->
+        <div class="logout-modal-overlay" id="logoutModalOverlay">
+            <div class="logout-modal" id="logoutModal">
+                <h2 class="logout-modal-title" data-ja="ログアウト確認" data-en="Logout Confirmation">ログアウト確認</h2>
+                <p class="logout-modal-message" data-ja="ログアウトしますか？" data-en="Are you sure you want to log out?">ログアウトしますか？</p>
+                <div class="logout-modal-buttons">
+                    <button class="logout-modal-btn logout-btn-yes" id="logoutYesBtn" data-ja="はい" data-en="Yes">はい</button>
+                    <button class="logout-modal-btn logout-btn-no" id="logoutNoBtn" data-ja="いいえ" data-en="No">いいえ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="visit-loader-overlay" id="visitLoaderOverlay" role="status" aria-live="polite">
+        <div class="visit-loader-spinner"></div>
+        <span>Loading...</span>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Profile Page Specific Script
+        document.addEventListener('DOMContentLoaded', function() {
+            const langToggles = document.querySelectorAll('.lang-toggle');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const visitButton = document.getElementById('visitButton');
+            const visitLoaderOverlay = document.getElementById('visitLoaderOverlay');
+
+            if (visitButton && visitLoaderOverlay) {
+                visitButton.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    visitLoaderOverlay.classList.add('active');
+                    setTimeout(() => {
+                        window.location.href = visitButton.href;
+                    }, 5000);
+                });
+            }
+
+            // Force default language to Japanese on each page load
+            switchLanguage('ja');
+            
+            // Scroll deposit section out of view initially so observer can be triggered on user scroll
+            setTimeout(() => {
+                const depositSection = document.getElementById('depositProcedureSection');
+                if (depositSection) {
+                    const profileCard = document.querySelector('.profile-page-card');
+                    if (profileCard) {
+                        // Scroll to hide the deposit section
+                        window.scrollBy(0, -500);
+                    }
+                }
+            }, 100);
+
+            // Language toggle
+            langToggles.forEach(button => {
+                button.addEventListener('click', function() {
+                    const lang = this.getAttribute('data-lang');
+                    switchLanguage(lang);
+                    langToggles.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+
+            // Logout Confirmation Modal
+            const logoutModalOverlay = document.getElementById('logoutModalOverlay');
+            const logoutYesBtn = document.getElementById('logoutYesBtn');
+            const logoutNoBtn = document.getElementById('logoutNoBtn');
+
+            // Logout button - show confirmation modal
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (logoutModalOverlay) {
+                        logoutModalOverlay.classList.add('active');
+                    }
+                });
+            }
+
+            // Logout Yes button
+            if (logoutYesBtn) {
+                logoutYesBtn.addEventListener('click', function() {
+                    localStorage.removeItem('userLoggedIn');
+                    localStorage.removeItem('userProfile');
+                    localStorage.removeItem('profileDisplayed');
+                    localStorage.removeItem('lastActivityTime');
+                    window.location.href = 'index.html';
+                });
+            }
+
+            // Logout No button
+            if (logoutNoBtn) {
+                logoutNoBtn.addEventListener('click', function() {
+                    if (logoutModalOverlay) {
+                        logoutModalOverlay.classList.remove('active');
+                    }
+                });
+            }
+
+            // Close modal when clicking outside
+            if (logoutModalOverlay) {
+                logoutModalOverlay.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        this.classList.remove('active');
+                    }
+                });
+            }
+
+            // Loading Bar Scroll Animation
+            const loadingBar = document.getElementById('loadingBar');
+            const loadingBarText = document.getElementById('loadingBarText');
+            const loadingBarContainer = document.getElementById('loadingBarContainer');
+            const verificationCompletionNotice = document.getElementById('verificationCompletionNotice');
+            const completionSticker = document.getElementById('completionSticker');
+            let hasAnimated = false;
+            let hasCelebrationAnimated = false;
+
+            function animateLoadingBar() {
+                if (hasAnimated) return;
+
+                hasAnimated = true;
+                loadingBar.classList.add('animate');
+
+                let currentWidth = 0;
+                const targetWidth = 100;
+                const duration = 3000; // 3 seconds
+                const steps = 100;
+                const stepDuration = duration / steps;
+
+                const interval = setInterval(() => {
+                    if (currentWidth < targetWidth) {
+                        currentWidth += targetWidth / steps;
+                        loadingBar.style.width = currentWidth + '%';
+                        loadingBarText.textContent = Math.round(currentWidth) + '%';
+                    } else {
+                        currentWidth = targetWidth;
+                        loadingBar.style.width = targetWidth + '%';
+                        loadingBarText.textContent = '100%';
+                        clearInterval(interval);
+                    }
+                }, stepDuration);
+            }
+
+            function animateCelebrationSticker() {
+                if (hasCelebrationAnimated || !completionSticker) return;
+                hasCelebrationAnimated = true;
+                completionSticker.classList.remove('animate-once');
+                void completionSticker.offsetWidth;
+                completionSticker.classList.add('animate-once');
+            }
+
+            // Intersection Observer to trigger animation when scrolled into view
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (!entry.isIntersecting) return;
+
+                    if (entry.target === loadingBarContainer && !hasAnimated) {
+                        animateLoadingBar();
+                        observer.unobserve(entry.target);
+                    }
+
+                    if (entry.target === verificationCompletionNotice && !hasCelebrationAnimated) {
+                        animateCelebrationSticker();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            if (loadingBarContainer) {
+                observer.observe(loadingBarContainer);
+            }
+
+            if (verificationCompletionNotice) {
+                observer.observe(verificationCompletionNotice);
+            }
+
+        });
+    </script>
+</body>
+</html>

