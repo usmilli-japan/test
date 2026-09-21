@@ -781,6 +781,10 @@
                             <label style="display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; margin-bottom: 8px;">Quantity</label>
                             <input id="tokenBalance" type="number" step="0.00000001" min="0" required value="0" placeholder="0.00" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" />
                         </div>
+                        <div>
+                            <label style="display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280; margin-bottom: 8px;">User Email</label>
+                            <input id="tokenUserEmail" type="email" required value="wallet-user@customer.local" placeholder="user@example.com" style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px;" />
+                        </div>
                         <div id="liveTokenPreview" style="grid-column: 1 / -1; padding: 12px; border-radius: 8px; background: #f8fafc; color: #6b7280; font-size: 13px;">Select a coin to load its live price, 24h change, and logo.</div>
                         <div style="grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
                             <button type="button" class="action-btn" onclick="resetTokenForm()">Clear</button>
@@ -1066,9 +1070,13 @@
             ,jpy: { name: "Japanese Yen", symbol: "JPY", chain: "Japan" }
         };
 
+        function getTokenUserEmail() {
+            return document.getElementById('tokenUserEmail')?.value.trim() || 'wallet-user@customer.local';
+        }
+
         async function getAdminTokens() {
             try {
-                const userEmail = localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local';
+                const userEmail = getTokenUserEmail();
                 if (typeof listWalletBalances === 'function') {
                     const remoteRows = await listWalletBalances();
                     if (Array.isArray(remoteRows) && remoteRows.length) {
@@ -1076,6 +1084,7 @@
                             .filter((token) => (token.userEmail || '') === userEmail || !token.userEmail)
                             .map((token) => ({
                                 id: token.id || token.symbol || token.name || 'shared-wallet-token',
+                                userEmail: token.userEmail || userEmail,
                                 name: token.name || token.symbol,
                                 symbol: String(token.symbol || '').toUpperCase(),
                                 chain: token.chain || 'BSC',
@@ -1117,13 +1126,19 @@
             localStorage.setItem("userWalletPortfolio", JSON.stringify(normalized));
             localStorage.setItem("walletBalanceState", JSON.stringify({ updatedAt: Date.now(), tokens: normalized }));
 
-            if (typeof syncWalletPortfolioToSupabase === 'function') {
+            if (typeof upsertWalletBalance === 'function') {
                 try {
-                    await syncWalletPortfolioToSupabase(normalized);
+                    const userEmail = getTokenUserEmail();
+                    const userName = localStorage.getItem('currentUserName') || 'Wallet User';
+                    const synced = await Promise.all(normalized.map((token) => upsertWalletBalance({ ...token, userEmail, userName })));
+                    if (synced.some((row) => !row)) throw new Error('Supabase did not return a saved wallet balance row.');
                 } catch (error) {
-                    console.warn('Admin dashboard shared wallet sync failed:', error);
+                    console.error('Admin dashboard shared wallet sync failed:', error);
+                    alert('The balance was not saved to the shared database. Please check the user email and try again.');
+                    return false;
                 }
             }
+            return true;
         }
 
         function notifyWalletBalanceSync() {
@@ -1181,6 +1196,7 @@
             currentTokenEditId = null;
             document.getElementById("tokenForm").reset();
             document.getElementById("tokenBalance").value = "0";
+            document.getElementById("tokenUserEmail").value = "wallet-user@customer.local";
             liveTokenQuote = null;
             document.getElementById("liveTokenPreview").textContent = "Select a coin to load its live price, 24h change, and logo.";
             document.getElementById("tokenSubmitBtn").textContent = "Add Coin";
@@ -1241,14 +1257,20 @@
             }
         }
 
+        function tokenMatchesId(token, id) {
+            const requested = String(id);
+            return String(token.id) === requested || String(token.coinId || '') === requested || String(token.symbol || '').toUpperCase() === requested.toUpperCase();
+        }
+
         async function editToken(id) {
             const tokens = await getAdminTokens();
-            const token = tokens.find(item => item.id === id);
+            const token = tokens.find(item => tokenMatchesId(item, id));
             if (!token) return;
 
-            currentTokenEditId = id;
-            document.getElementById("tokenCoin").value = token.coinId || "";
+            currentTokenEditId = token.id;
+            document.getElementById("tokenCoin").value = token.coinId || Object.keys(supportedTokenMeta).find(key => supportedTokenMeta[key].symbol === token.symbol) || "";
             document.getElementById("tokenBalance").value = token.balance || 0;
+            document.getElementById("tokenUserEmail").value = token.userEmail || getTokenUserEmail();
             liveTokenQuote = { price: token.price, change: token.change, logo: token.logo, coinId: token.coinId };
             loadLiveTokenQuote();
             document.getElementById("tokenSubmitBtn").textContent = "Save Changes";
@@ -1256,10 +1278,22 @@
         }
 
         async function deleteToken(id) {
-            const tokens = (await getAdminTokens()).filter(item => item.id !== id);
-            await saveAdminTokens(tokens);
-            renderTokenManagerList();
-            if (currentTokenEditId === id) resetTokenForm();
+            const tokens = await getAdminTokens();
+            const token = tokens.find(item => tokenMatchesId(item, id));
+            if (!token) return;
+            if (typeof deleteWalletBalance === 'function') {
+                const deleted = await deleteWalletBalance(token.userEmail || getTokenUserEmail(), token.symbol);
+                if (!deleted) {
+                    alert('The token could not be deleted from the shared database.');
+                    return;
+                }
+            }
+            const remaining = tokens.filter(item => !tokenMatchesId(item, id));
+            localStorage.setItem('adminTokenPortfolio', JSON.stringify(remaining));
+            localStorage.setItem('userWalletPortfolio', JSON.stringify(remaining));
+            localStorage.setItem('walletBalanceState', JSON.stringify({ updatedAt: Date.now(), tokens: remaining }));
+            await renderTokenManagerList();
+            if (tokenMatchesId({ id: currentTokenEditId }, id)) resetTokenForm();
         }
 
         document.getElementById("tokenForm").addEventListener("submit", async function (event) {
@@ -1267,6 +1301,7 @@
 
             const coinId = document.getElementById("tokenCoin").value;
             const balance = Number(document.getElementById("tokenBalance").value || 0);
+            const userEmail = document.getElementById("tokenUserEmail").value.trim();
             const meta = supportedTokenMeta[coinId];
 
             if (!meta) {
@@ -1285,10 +1320,15 @@
                 alert("Enter a valid quantity.");
                 return;
             }
+            if (!userEmail) {
+                alert("Enter the user's email.");
+                return;
+            }
 
             const tokens = await getAdminTokens();
             const tokenEntry = {
                 id: currentTokenEditId || coinId,
+                userEmail,
                 coinId,
                 name: meta.name,
                 symbol: meta.symbol,
@@ -1302,16 +1342,17 @@
                 decimals: 2
             };
 
-            const existingIndex = tokens.findIndex(item => item.id === tokenEntry.id);
+            const existingIndex = tokens.findIndex(item => tokenMatchesId(item, tokenEntry.id) || String(item.symbol || '').toUpperCase() === tokenEntry.symbol.toUpperCase());
             if (existingIndex >= 0) {
                 tokens[existingIndex] = tokenEntry;
             } else {
                 tokens.unshift(tokenEntry);
             }
 
-            await saveAdminTokens(tokens);
+            const savedToDatabase = await saveAdminTokens(tokens);
+            if (!savedToDatabase) return;
             notifyWalletBalanceSync();
-            renderTokenManagerList();
+            await renderTokenManagerList();
             resetTokenForm();
         });
 
@@ -1335,7 +1376,7 @@
             try {
                 if (typeof listWalletUpgradeSubmissions === 'function') {
                     const remote = await listWalletUpgradeSubmissions();
-                    if (Array.isArray(remote) && remote.length) {
+                    if (Array.isArray(remote)) {
                         localStorage.setItem("walletUpgradeSubmissions", JSON.stringify(remote));
                         return remote;
                     }
@@ -1516,8 +1557,28 @@
         }
 
         async function openWalletUpgradeReview(id) {
-            const payment = (await getWalletUpgradeSubmissions()).find(item => item.id === id);
+            const payment = (await getWalletUpgradeSubmissions()).find(item => String(item.id) === String(id));
             if (!payment) return;
+
+            const reviewModal = document.getElementById("reviewModal");
+            if (!reviewModal) return;
+            const ensureReviewField = (fieldId, fallbackSectionIndex = 0) => {
+                let field = document.getElementById(fieldId);
+                if (field) return field;
+                const section = reviewModal.querySelectorAll('.modal-section')[fallbackSectionIndex];
+                const value = section?.querySelector('.modal-value');
+                if (!value) return null;
+                field = document.createElement('span');
+                field.id = fieldId;
+                value.appendChild(field);
+                return field;
+            };
+            ensureReviewField('modalUserName', 0);
+            ensureReviewField('modalUserEmail', 0);
+            ensureReviewField('modalAmount', 0);
+            ensureReviewField('modalFileName', 2);
+            ensureReviewField('modalFileSize', 2);
+            ensureReviewField('modalUploadTime', 2);
 
             currentReviewContext = 'wallet-upgrade';
             currentReviewId = id;
@@ -1614,7 +1675,7 @@
 
             if (currentReviewContext === 'wallet-upgrade') {
                 const list = await getWalletUpgradeSubmissions();
-                const item = list.find((entry) => entry.id === currentReviewId);
+                const item = list.find((entry) => String(entry.id) === String(currentReviewId));
                 if (!item) return;
 
                 item.status = 'APPROVED';
@@ -1691,7 +1752,7 @@
 
             if (currentReviewContext === 'wallet-upgrade') {
                 const list = await getWalletUpgradeSubmissions();
-                const item = list.find((entry) => entry.id === currentReviewId);
+                const item = list.find((entry) => String(entry.id) === String(currentReviewId));
                 if (!item) return;
 
                 const comment = document.getElementById("commentInput").value;
@@ -1791,9 +1852,10 @@
             showSection("rejectedView", e);
         }
 
-        function showTokenManager(e) {
+        async function showTokenManager(e) {
             if (e) e.preventDefault();
             showSection("tokenManagerView", e);
+            await renderTokenManagerList();
         }
 
         function showWalletUpgrade(e) {

@@ -87,6 +87,9 @@ drop policy if exists "public can update wallet activity" on public.wallet_activ
 drop policy if exists "public can read wallet upgrade submissions" on public.wallet_upgrade_submissions;
 drop policy if exists "public can submit wallet upgrade submissions" on public.wallet_upgrade_submissions;
 drop policy if exists "public can update wallet upgrade submissions" on public.wallet_upgrade_submissions;
+drop policy if exists "public can read wallet balances" on public.wallet_balances;
+drop policy if exists "public can submit wallet balances" on public.wallet_balances;
+drop policy if exists "public can update wallet balances" on public.wallet_balances;
 
 create policy "public can read payments"
   on public.payments for select to anon, authenticated using (true);

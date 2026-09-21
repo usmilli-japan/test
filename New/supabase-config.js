@@ -163,6 +163,15 @@ async function upsertWalletBalance(balance) {
     return Array.isArray(result) ? (result[0] || null) : null;
 }
 
+async function deleteWalletBalance(userEmail, symbol) {
+    if (!isSupabaseReady()) return false;
+    const result = await safeSupabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(userEmail)}&symbol=eq.${encodeURIComponent(String(symbol || '').toUpperCase())}`, {
+        method: 'DELETE',
+        headers: { Prefer: 'return=representation' }
+    }, []);
+    return Array.isArray(result);
+}
+
 async function listWalletUpgradeSubmissions() {
     return safeSupabaseRequest('wallet_upgrade_submissions?select=*&order=id.desc', {}, []);
 }
