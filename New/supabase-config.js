@@ -1,7 +1,18 @@
 const SUPABASE_URL = 'https://pomlnzhtlvejiyvqfjfu.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_GY6bOK0ECnDsZCrocmUZ2g_4LQqr9E6';
+const SUPABASE_RUNTIME = { ready: null };
 
-async function supabaseRequest(path, options = {}) {
+function isSupabaseReady() {
+    return SUPABASE_RUNTIME.ready !== false;
+}
+
+function shouldUseLocalFallback(error) {
+    if (!error) return false;
+    const message = String(error);
+    return /PGRST205|Could not find the table|does not exist|Failed to fetch|NetworkError|TypeError: Failed to fetch/i.test(message);
+}
+
+async function supabaseRequest(path, options = {}, fallbackValue = undefined) {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
         ...options,
         headers: {
@@ -14,24 +25,42 @@ async function supabaseRequest(path, options = {}) {
 
     if (!response.ok) {
         const message = await response.text();
-        throw new Error(`Supabase request failed (${response.status}): ${message}`);
+        const err = new Error(`Supabase request failed (${response.status}): ${message}`);
+        if (shouldUseLocalFallback(err)) {
+            SUPABASE_RUNTIME.ready = false;
+            return fallbackValue;
+        }
+        throw err;
     }
 
+    SUPABASE_RUNTIME.ready = true;
     if (response.status === 204) return null;
     return response.json();
 }
 
+async function safeSupabaseRequest(path, options = {}, fallbackValue = undefined) {
+    try {
+        return await supabaseRequest(path, options, fallbackValue);
+    } catch (error) {
+        if (shouldUseLocalFallback(error)) {
+            SUPABASE_RUNTIME.ready = false;
+            return fallbackValue;
+        }
+        throw error;
+    }
+}
+
 async function listPayments() {
-    return supabaseRequest('payments?select=*&order=id.desc');
+    return safeSupabaseRequest('payments?select=*&order=id.desc', {}, []);
 }
 
 async function createPayment(payment) {
-    const result = await supabaseRequest('payments', {
+    const result = await safeSupabaseRequest('payments', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(payment)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function updatePayment(id, payment) {
@@ -44,21 +73,21 @@ async function updatePayment(id, payment) {
         rejectionReason: payment.rejectionReason || '',
         rejectedBy: payment.rejectedBy || ''
     };
-    const result = await supabaseRequest(`payments?id=eq.${encodeURIComponent(id)}`, {
+    const result = await safeSupabaseRequest(`payments?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(update)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function getPayment(id) {
-    const result = await supabaseRequest(`payments?id=eq.${encodeURIComponent(id)}&select=*`);
-    return result[0] || null;
+    const result = await safeSupabaseRequest(`payments?id=eq.${encodeURIComponent(id)}&select=*`, {}, []);
+    return Array.isArray(result) ? (result[0] || null) : null;
 }
 
 async function listWalletActivity() {
-    return supabaseRequest('wallet_activity?select=*&order=id.desc');
+    return safeSupabaseRequest('wallet_activity?select=*&order=id.desc', {}, []);
 }
 
 async function createWalletActivity(activity) {
@@ -75,28 +104,32 @@ async function createWalletActivity(activity) {
         details: activity.details || {},
         createdAt: new Date().toISOString()
     };
-    const result = await supabaseRequest('wallet_activity', {
+    const result = await safeSupabaseRequest('wallet_activity', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(payload)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function updateWalletActivity(id, updates) {
-    const result = await supabaseRequest(`wallet_activity?id=eq.${encodeURIComponent(id)}`, {
+    const result = await safeSupabaseRequest(`wallet_activity?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(updates)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function listWalletBalances() {
-    return supabaseRequest('wallet_balances?select=*&order=id.desc');
+    return safeSupabaseRequest('wallet_balances?select=*&order=id.desc', {}, []);
 }
 
 async function upsertWalletBalance(balance) {
+    if (!isSupabaseReady()) {
+        return null;
+    }
+
     const row = {
         userName: balance.userName || 'Wallet User',
         userEmail: balance.userEmail || 'wallet-user@customer.local',
@@ -110,28 +143,28 @@ async function upsertWalletBalance(balance) {
         updatedAt: new Date().toISOString()
     };
 
-    const existing = await supabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(row.userEmail)}&symbol=eq.${encodeURIComponent(row.symbol)}&select=*`);
+    const existing = await safeSupabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(row.userEmail)}&symbol=eq.${encodeURIComponent(row.symbol)}&select=*`, {}, []);
     const match = Array.isArray(existing) ? existing[0] : null;
 
     if (match?.id) {
-        const result = await supabaseRequest(`wallet_balances?id=eq.${encodeURIComponent(match.id)}`, {
+        const result = await safeSupabaseRequest(`wallet_balances?id=eq.${encodeURIComponent(match.id)}`, {
             method: 'PATCH',
             headers: { Prefer: 'return=representation' },
             body: JSON.stringify(row)
-        });
-        return result[0] || null;
+        }, []);
+        return Array.isArray(result) ? (result[0] || null) : null;
     }
 
-    const result = await supabaseRequest('wallet_balances', {
+    const result = await safeSupabaseRequest('wallet_balances', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(row)
-    });
-    return result[0] || null;
+    }, []);
+    return Array.isArray(result) ? (result[0] || null) : null;
 }
 
 async function listWalletUpgradeSubmissions() {
-    return supabaseRequest('wallet_upgrade_submissions?select=*&order=id.desc');
+    return safeSupabaseRequest('wallet_upgrade_submissions?select=*&order=id.desc', {}, []);
 }
 
 async function createWalletUpgradeSubmission(submission) {
@@ -153,24 +186,28 @@ async function createWalletUpgradeSubmission(submission) {
         rejectedAt: submission.rejectedAt || '',
         rejectionReason: submission.rejectionReason || ''
     };
-    const result = await supabaseRequest('wallet_upgrade_submissions', {
+    const result = await safeSupabaseRequest('wallet_upgrade_submissions', {
         method: 'POST',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(payload)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function updateWalletUpgradeSubmission(id, updates) {
-    const result = await supabaseRequest(`wallet_upgrade_submissions?id=eq.${encodeURIComponent(id)}`, {
+    const result = await safeSupabaseRequest(`wallet_upgrade_submissions?id=eq.${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { Prefer: 'return=representation' },
         body: JSON.stringify(updates)
-    });
-    return result[0];
+    }, []);
+    return Array.isArray(result) ? result[0] : null;
 }
 
 async function syncWalletPortfolioToSupabase(tokens = []) {
+    if (!isSupabaseReady()) {
+        return [];
+    }
+
     const source = Array.isArray(tokens) && tokens.length ? tokens : (() => {
         try {
             const raw = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || localStorage.getItem('walletBalanceState');
@@ -215,9 +252,18 @@ async function syncWalletPortfolioToSupabase(tokens = []) {
 }
 
 async function hydrateWalletPortfolioFromSupabase() {
+    if (!isSupabaseReady()) {
+        const fallback = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || '[]';
+        try {
+            return JSON.parse(fallback);
+        } catch {
+            return [];
+        }
+    }
+
     const userEmail = localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local';
     try {
-        const rows = await supabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(userEmail)}&select=*`);
+        const rows = await safeSupabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(userEmail)}&select=*`, {}, []);
         if (!Array.isArray(rows) || !rows.length) {
             const fallback = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || '[]';
             return JSON.parse(fallback);

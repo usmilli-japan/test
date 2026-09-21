@@ -1186,6 +1186,24 @@
             document.getElementById("tokenSubmitBtn").textContent = "Add Coin";
         }
 
+        function getFallbackTokenPrice(coinId) {
+            const fallbackPrices = {
+                bitcoin: 62000,
+                ethereum: 3500,
+                binancecoin: 560,
+                solana: 150,
+                tether: 1,
+                'usd-coin': 1,
+                ripple: 0.6,
+                dogecoin: 0.18,
+                cardano: 0.7,
+                'avalanche-2': 42,
+                'matic-network': 0.72,
+                jpy: 0.0075
+            };
+            return Number(fallbackPrices[coinId] || 1);
+        }
+
         async function loadLiveTokenQuote() {
             const coinId = document.getElementById("tokenCoin").value;
             const preview = document.getElementById("liveTokenPreview");
@@ -1205,15 +1223,21 @@
                 if (requestId !== liveQuoteRequest || coinId !== document.getElementById("tokenCoin").value) return;
                 liveTokenQuote = {
                     coinId,
-                    price: Number(market.current_price) || 0,
+                    price: Number(market.current_price) || getFallbackTokenPrice(coinId),
                     change: Number(market.price_change_percentage_24h) || 0,
                     logo: market.image || defaultTokenLogo(supportedTokenMeta[coinId].symbol)
                 };
                 preview.innerHTML = `<img src="${liveTokenQuote.logo}" alt="${supportedTokenMeta[coinId].symbol} logo" style="width: 28px; height: 28px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"> <strong>${supportedTokenMeta[coinId].name} (${supportedTokenMeta[coinId].symbol})</strong> &middot; Live price: $${liveTokenQuote.price.toLocaleString(undefined, { maximumFractionDigits: 8 })} &middot; 24h: <span style="color: ${liveTokenQuote.change >= 0 ? '#059669' : '#dc2626'};">${liveTokenQuote.change >= 0 ? '+' : ''}${liveTokenQuote.change.toFixed(2)}%</span>`;
             } catch (error) {
-                liveTokenQuote = null;
-                preview.textContent = "Live price could not be loaded. Check the connection and try again.";
-                console.error(error);
+                console.warn("Live price fallback used for admin token entry:", error);
+                const fallbackPrice = getFallbackTokenPrice(coinId);
+                liveTokenQuote = {
+                    coinId,
+                    price: fallbackPrice,
+                    change: 0,
+                    logo: defaultTokenLogo(supportedTokenMeta[coinId].symbol)
+                };
+                preview.innerHTML = `<img src="${liveTokenQuote.logo}" alt="${supportedTokenMeta[coinId].symbol} logo" style="width: 28px; height: 28px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"> <strong>${supportedTokenMeta[coinId].name} (${supportedTokenMeta[coinId].symbol})</strong> &middot; Reference price: $${liveTokenQuote.price.toLocaleString(undefined, { maximumFractionDigits: 8 })} &middot; <span style="color: #64748b;">offline fallback</span>`;
             }
         }
 
@@ -1245,9 +1269,17 @@
             const balance = Number(document.getElementById("tokenBalance").value || 0);
             const meta = supportedTokenMeta[coinId];
 
-            if (!meta || !liveTokenQuote || !liveTokenQuote.price) {
-                alert("Select a coin and wait for its live market data to load.");
+            if (!meta) {
+                alert("Select a valid coin before saving.");
                 return;
+            }
+            if (!liveTokenQuote) {
+                liveTokenQuote = {
+                    coinId,
+                    price: getFallbackTokenPrice(coinId),
+                    change: 0,
+                    logo: defaultTokenLogo(meta.symbol)
+                };
             }
             if (!Number.isFinite(balance) || balance < 0) {
                 alert("Enter a valid quantity.");

