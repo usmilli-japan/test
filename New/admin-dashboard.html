@@ -726,8 +726,13 @@
                 <div class="reviews-container">
                     <div class="reviews-header">
                         <h2 class="reviews-title">Upgrade Proof Requests</h2>
-                        <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end;">
+                            <input id="resetUserEmail" type="email" value="wallet-upgrade@customer.local" placeholder="User email" aria-label="User email to reset" style="width: 220px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+                            <button class="filter-btn" onclick="resetLatestWalletUpgrade()">↻ Reset User</button>
+                            <button class="filter-btn" onclick="updateStats()">🔄 Refresh</button>
+                        </div>
                     </div>
+                    <div id="resetUserStatus" role="status" aria-live="polite" style="display: none; margin: 12px 20px 0; padding: 10px 12px; border-radius: 6px; font-size: 13px;"></div>
                     <div id="walletUpgradeList"></div>
                 </div>
             </section>
@@ -866,6 +871,7 @@
                 <div class="decision-buttons">
                     <button class="decision-btn approve" onclick="approvePayment()">✓ Approve</button>
                     <button class="decision-btn reject" onclick="rejectPayment()">✗ Reject</button>
+                    <button class="decision-btn" onclick="resetWalletUpgrade()">↻ Reset Upgrade</button>
                 </div>
             </div>
         </div>
@@ -1000,6 +1006,7 @@
         let payments = [];
         let currentReviewId = null;
         let currentReviewContext = 'payment';
+        let activeAdminSection = null;
 
         // Initialize
         window.addEventListener("load", async () => {
@@ -1007,7 +1014,7 @@
             renderTokenManagerList();
             updateStats();
             updateNotificationBadges();
-            showDashboard();
+            if (!activeAdminSection) showDashboard();
             
             // Auto-refresh notifications every 5 seconds
             setInterval(() => {
@@ -1747,6 +1754,121 @@
             }, 2000);
         }
 
+        async function resetWalletUpgrade() {
+            if (currentReviewContext !== 'wallet-upgrade' || currentReviewId === null) return;
+            const list = await getWalletUpgradeSubmissions();
+            const item = list.find((entry) => String(entry.id) === String(currentReviewId));
+            if (!item) return;
+
+            item.status = 'PENDING';
+            item.reviewedBy = '';
+            item.reviewComment = '';
+            item.approvedAt = '';
+            item.rejectedAt = '';
+            item.rejectionReason = '';
+            saveWalletUpgradeSubmissions(list);
+            localStorage.removeItem('walletUpgradeApproval');
+            localStorage.setItem('walletUpgradeStatus', 'PENDING');
+            localStorage.setItem('walletUpgradeLastSubmission', JSON.stringify(item));
+
+            if (typeof updateWalletUpgradeSubmission === 'function') {
+                const updated = await updateWalletUpgradeSubmission(item.id, {
+                    status: 'PENDING',
+                    reviewedBy: '',
+                    reviewComment: '',
+                    approvedAt: '',
+                    rejectedAt: '',
+                    rejectionReason: ''
+                });
+                if (!updated) {
+                    alert('The upgrade could not be reset in the shared database.');
+                    return;
+                }
+            }
+
+            document.getElementById('successMessage').textContent = '✓ Upgrade reset. The user must submit the payment proof again.';
+            document.getElementById('successMessage').style.display = 'block';
+            setTimeout(() => closeModal(), 1500);
+        }
+
+        async function resetLatestWalletUpgrade() {
+            const status = document.getElementById('resetUserStatus');
+            const showStatus = (message, success) => {
+                if (!status) return;
+                status.textContent = message;
+                status.style.display = 'block';
+                status.style.color = success ? '#166534' : '#991b1b';
+                status.style.background = success ? '#dcfce7' : '#fee2e2';
+            };
+            const email = document.getElementById('resetUserEmail')?.value.trim();
+            if (!email) {
+                showStatus('Enter a user email before resetting.', false);
+                return;
+            }
+            try {
+                const submissions = await getWalletUpgradeSubmissions();
+                const matching = submissions.filter(entry => String(entry.userEmail || '').toLowerCase() === email.trim().toLowerCase());
+                let item = matching[0];
+                if (!item) {
+                item = {
+                    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                    userName: 'Wallet Upgrade User',
+                    userEmail: email.trim(),
+                    amount: '2.6 BNB',
+                    senderAddress: '',
+                    txHash: '',
+                    fileName: '',
+                    fileType: '',
+                    fileData: '',
+                    fileSize: '',
+                    uploadTime: new Date().toLocaleString(),
+                    status: 'PENDING',
+                    reviewComment: '',
+                    reviewedBy: '',
+                    approvedAt: '',
+                    rejectedAt: '',
+                    rejectionReason: ''
+                };
+                    if (typeof createWalletUpgradeSubmission === 'function') {
+                        const created = await createWalletUpgradeSubmission(item);
+                        if (!created) throw new Error('The new reset request was not saved to Supabase.');
+                        item = { ...item, ...created };
+                    }
+                    submissions.unshift(item);
+                    saveWalletUpgradeSubmissions(submissions);
+                } else {
+                matching.forEach(entry => {
+                    entry.status = 'PENDING';
+                    entry.reviewedBy = '';
+                    entry.reviewComment = '';
+                    entry.approvedAt = '';
+                    entry.rejectedAt = '';
+                    entry.rejectionReason = '';
+                });
+                saveWalletUpgradeSubmissions(submissions);
+                    if (typeof updateWalletUpgradeSubmission === 'function') {
+                        const updated = await Promise.all(matching.map(entry => updateWalletUpgradeSubmission(entry.id, {
+                        status: 'PENDING',
+                        reviewedBy: '',
+                        reviewComment: '',
+                        approvedAt: '',
+                        rejectedAt: '',
+                        rejectionReason: ''
+                        })));
+                        if (updated.some(row => !row)) throw new Error('The reset was not saved to Supabase.');
+                    }
+                }
+                currentReviewContext = 'wallet-upgrade';
+                currentReviewId = item.id;
+                await resetWalletUpgrade();
+                await updateStats();
+                showStatus(`✓ Successfully reset ${email}. The user must submit the upgrade again.`, true);
+            } catch (error) {
+                console.error('Reset user failed:', error);
+                showStatus(`✗ Reset failed: ${error.message}`, false);
+            }
+        }
+
         async function rejectPayment() {
             if (currentReviewId === null) return;
 
@@ -1869,6 +1991,7 @@
         }
 
         function showSection(sectionId, event) {
+            activeAdminSection = sectionId;
             document.querySelectorAll("[id$='View']").forEach(el => el.style.display = "none");
             document.getElementById(sectionId).style.display = "block";
 

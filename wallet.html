@@ -924,20 +924,6 @@
                 localStorage.setItem('userWalletPortfolio',JSON.stringify(stored));
                 localStorage.setItem('walletBalanceState',JSON.stringify({updatedAt:Date.now(),tokens:stored}));
                 window.dispatchEvent(new StorageEvent('storage',{key:'adminTokenPortfolio'}));
-                if(typeof createWalletActivity==='function'){
-                    createWalletActivity({
-                        userName:localStorage.getItem('currentUserName')||'Wallet User',
-                        userEmail:localStorage.getItem('currentUserEmail')||'wallet-user@customer.local',
-                        action:'SEND',
-                        type:'wallet',
-                        status:'COMPLETED',
-                        amount:String(amount),
-                        token:saved.symbol,
-                        network:sendWalletNetwork,
-                        destination:sendWalletAddress,
-                        details:{from:'0x95Af8e9b192024EF8b6C02149C28EB7288418e28',receipt:saved.lastTransaction}
-                    }).catch(error=>console.warn('Failed to save transaction receipt:',error));
-                }
                 if(typeof upsertWalletBalance==='function'){
                     try{
                         await upsertWalletBalance({
@@ -979,7 +965,7 @@
             const history=document.querySelector('.coin-history');
             if(!history||history.dataset.rendered==='true')return;
             const token=getWalletTokenData().find(item=>item.symbol===selectedToken);
-            const stored=(()=>{try{return JSON.parse(localStorage.getItem('userWalletPortfolio')||localStorage.getItem('adminTokenPortfolio')||'[]');}catch{return[];}})();
+            const stored=(()=>{try{return JSON.parse(localStorage.getItem('adminTokenPortfolio')||'[]');}catch{return[];}})();
             const transaction=stored.find(item=>(item.symbol||'').toUpperCase()===selectedToken)?.lastTransaction;
             if(!token||!transaction)return;
             const existing=history.querySelector('.coin-history-row');

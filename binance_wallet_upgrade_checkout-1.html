@@ -880,6 +880,14 @@
                 if (match.status === 'APPROVED') {
                     localStorage.setItem('walletUpgradeApproval', 'APPROVED');
                     applyWalletUpgradeApprovalState();
+                } else {
+                    localStorage.removeItem('walletUpgradeApproval');
+                    localStorage.setItem('walletUpgradeStatus', match.status || 'PENDING');
+                    if (currentStep === 4) {
+                        clearInterval(redirectTimer);
+                        redirectTimer = null;
+                        goToStep(1);
+                    }
                 }
             } catch (error) {
                 console.warn('Supabase wallet upgrade status refresh failed:', error);
