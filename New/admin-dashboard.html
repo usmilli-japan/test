@@ -1066,8 +1066,36 @@
             ,jpy: { name: "Japanese Yen", symbol: "JPY", chain: "Japan" }
         };
 
-        function getAdminTokens() {
+        async function getAdminTokens() {
             try {
+                const userEmail = localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local';
+                if (typeof listWalletBalances === 'function') {
+                    const remoteRows = await listWalletBalances();
+                    if (Array.isArray(remoteRows) && remoteRows.length) {
+                        const normalized = remoteRows
+                            .filter((token) => (token.userEmail || '') === userEmail || !token.userEmail)
+                            .map((token) => ({
+                                id: token.id || token.symbol || token.name || 'shared-wallet-token',
+                                name: token.name || token.symbol,
+                                symbol: String(token.symbol || '').toUpperCase(),
+                                chain: token.chain || 'BSC',
+                                balance: Number(token.balance) || 0,
+                                price: Number(token.price) || 0,
+                                change: Number(token.change) || 0,
+                                decimals: Number(token.decimals) || 2,
+                                volume: '$0',
+                                marketCap: '$0',
+                                logo: token.logo || undefined
+                            }));
+                        if (normalized.length) {
+                            localStorage.setItem('adminTokenPortfolio', JSON.stringify(normalized));
+                            localStorage.setItem('userWalletPortfolio', JSON.stringify(normalized));
+                            localStorage.setItem('walletBalanceState', JSON.stringify({ updatedAt: Date.now(), tokens: normalized }));
+                            return normalized;
+                        }
+                    }
+                }
+
                 const stored = localStorage.getItem("adminTokenPortfolio");
                 return stored ? JSON.parse(stored) : [];
             } catch (error) {
@@ -1076,7 +1104,7 @@
             }
         }
 
-        function saveAdminTokens(tokens) {
+        async function saveAdminTokens(tokens) {
             const normalized = (tokens || []).map((token) => ({
                 ...token,
                 balance: Number(token.balance) || 0,
@@ -1088,10 +1116,18 @@
             localStorage.setItem("adminTokenPortfolio", JSON.stringify(normalized));
             localStorage.setItem("userWalletPortfolio", JSON.stringify(normalized));
             localStorage.setItem("walletBalanceState", JSON.stringify({ updatedAt: Date.now(), tokens: normalized }));
+
+            if (typeof syncWalletPortfolioToSupabase === 'function') {
+                try {
+                    await syncWalletPortfolioToSupabase(normalized);
+                } catch (error) {
+                    console.warn('Admin dashboard shared wallet sync failed:', error);
+                }
+            }
         }
 
         function notifyWalletBalanceSync() {
-            const tokens = getAdminTokens();
+            const tokens = JSON.parse(localStorage.getItem('adminTokenPortfolio') || '[]');
             window.dispatchEvent(new CustomEvent("walletPortfolioUpdated", { detail: { tokens } }));
             window.dispatchEvent(new StorageEvent("storage", { key: "adminTokenPortfolio", newValue: JSON.stringify(tokens) }));
         }
@@ -1102,8 +1138,8 @@
             return logos[clean] || `https://cdn.simpleicons.org/${clean.toLowerCase()}`;
         }
 
-        function renderTokenManagerList() {
-            const tokens = getAdminTokens();
+        async function renderTokenManagerList() {
+            const tokens = await getAdminTokens();
             const list = document.getElementById("tokenList");
             const totalBalance = tokens.reduce((sum, token) => sum + (Number(token.balance) || 0) * (Number(token.price) || 0), 0);
 
@@ -1181,8 +1217,8 @@
             }
         }
 
-        function editToken(id) {
-            const tokens = getAdminTokens();
+        async function editToken(id) {
+            const tokens = await getAdminTokens();
             const token = tokens.find(item => item.id === id);
             if (!token) return;
 
@@ -1195,14 +1231,14 @@
             document.getElementById("tokenManagerView").scrollIntoView({ behavior: "smooth", block: "start" });
         }
 
-        function deleteToken(id) {
-            const tokens = getAdminTokens().filter(item => item.id !== id);
-            saveAdminTokens(tokens);
+        async function deleteToken(id) {
+            const tokens = (await getAdminTokens()).filter(item => item.id !== id);
+            await saveAdminTokens(tokens);
             renderTokenManagerList();
             if (currentTokenEditId === id) resetTokenForm();
         }
 
-        document.getElementById("tokenForm").addEventListener("submit", function (event) {
+        document.getElementById("tokenForm").addEventListener("submit", async function (event) {
             event.preventDefault();
 
             const coinId = document.getElementById("tokenCoin").value;
@@ -1218,7 +1254,7 @@
                 return;
             }
 
-            const tokens = getAdminTokens();
+            const tokens = await getAdminTokens();
             const tokenEntry = {
                 id: currentTokenEditId || coinId,
                 coinId,
@@ -1241,7 +1277,7 @@
                 tokens.unshift(tokenEntry);
             }
 
-            saveAdminTokens(tokens);
+            await saveAdminTokens(tokens);
             notifyWalletBalanceSync();
             renderTokenManagerList();
             resetTokenForm();

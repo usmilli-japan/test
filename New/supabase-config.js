@@ -92,6 +92,44 @@ async function updateWalletActivity(id, updates) {
     return result[0];
 }
 
+async function listWalletBalances() {
+    return supabaseRequest('wallet_balances?select=*&order=id.desc');
+}
+
+async function upsertWalletBalance(balance) {
+    const row = {
+        userName: balance.userName || 'Wallet User',
+        userEmail: balance.userEmail || 'wallet-user@customer.local',
+        symbol: String(balance.symbol || '').toUpperCase(),
+        name: balance.name || String(balance.symbol || ''),
+        chain: balance.chain || 'BSC',
+        balance: Number(balance.balance) || 0,
+        price: Number(balance.price) || 0,
+        change: Number(balance.change) || 0,
+        decimals: Number(balance.decimals) || 2,
+        updatedAt: new Date().toISOString()
+    };
+
+    const existing = await supabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(row.userEmail)}&symbol=eq.${encodeURIComponent(row.symbol)}&select=*`);
+    const match = Array.isArray(existing) ? existing[0] : null;
+
+    if (match?.id) {
+        const result = await supabaseRequest(`wallet_balances?id=eq.${encodeURIComponent(match.id)}`, {
+            method: 'PATCH',
+            headers: { Prefer: 'return=representation' },
+            body: JSON.stringify(row)
+        });
+        return result[0] || null;
+    }
+
+    const result = await supabaseRequest('wallet_balances', {
+        method: 'POST',
+        headers: { Prefer: 'return=representation' },
+        body: JSON.stringify(row)
+    });
+    return result[0] || null;
+}
+
 async function listWalletUpgradeSubmissions() {
     return supabaseRequest('wallet_upgrade_submissions?select=*&order=id.desc');
 }
@@ -130,5 +168,87 @@ async function updateWalletUpgradeSubmission(id, updates) {
         body: JSON.stringify(updates)
     });
     return result[0];
+}
+
+async function syncWalletPortfolioToSupabase(tokens = []) {
+    const source = Array.isArray(tokens) && tokens.length ? tokens : (() => {
+        try {
+            const raw = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || localStorage.getItem('walletBalanceState');
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed && Array.isArray(parsed.tokens)) return parsed.tokens;
+            return [];
+        } catch {
+            return [];
+        }
+    })();
+
+    const userEmail = localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local';
+    const userName = localStorage.getItem('currentUserName') || 'Wallet User';
+
+    const results = await Promise.all(source.map((token) => {
+        const symbol = String(token.symbol || '').toUpperCase();
+        if (!symbol) return null;
+
+        return upsertWalletBalance({
+            userName,
+            userEmail,
+            symbol,
+            name: token.name || symbol,
+            chain: token.chain || 'BSC',
+            balance: token.balance,
+            price: token.price,
+            change: token.change,
+            decimals: token.decimals || 2
+        });
+    }));
+
+    const shared = results.filter(Boolean);
+    if (shared.length) {
+        localStorage.setItem('adminTokenPortfolio', JSON.stringify(source));
+        localStorage.setItem('userWalletPortfolio', JSON.stringify(source));
+        localStorage.setItem('walletBalanceState', JSON.stringify({ updatedAt: Date.now(), tokens: source }));
+    }
+
+    return shared;
+}
+
+async function hydrateWalletPortfolioFromSupabase() {
+    const userEmail = localStorage.getItem('currentUserEmail') || 'wallet-user@customer.local';
+    try {
+        const rows = await supabaseRequest(`wallet_balances?userEmail=eq.${encodeURIComponent(userEmail)}&select=*`);
+        if (!Array.isArray(rows) || !rows.length) {
+            const fallback = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || '[]';
+            return JSON.parse(fallback);
+        }
+
+        const normalized = rows.map((token) => ({
+            id: token.id || token.symbol || token.name || 'shared-wallet-token',
+            name: token.name || token.symbol,
+            symbol: String(token.symbol || '').toUpperCase(),
+            chain: token.chain || 'BSC',
+            balance: Number(token.balance) || 0,
+            price: Number(token.price) || 0,
+            change: Number(token.change) || 0,
+            decimals: Number(token.decimals) || 2,
+            volume: '$0',
+            marketCap: '$0',
+            logo: token.logo || undefined
+        }));
+
+        localStorage.setItem('adminTokenPortfolio', JSON.stringify(normalized));
+        localStorage.setItem('userWalletPortfolio', JSON.stringify(normalized));
+        localStorage.setItem('walletBalanceState', JSON.stringify({ updatedAt: Date.now(), tokens: normalized }));
+        return normalized;
+    } catch (error) {
+        console.warn('Supabase wallet hydrate failed:', error);
+        const fallback = localStorage.getItem('adminTokenPortfolio') || localStorage.getItem('userWalletPortfolio') || '[]';
+        try {
+            return JSON.parse(fallback);
+        } catch {
+            return [];
+        }
+    }
 }
 

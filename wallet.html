@@ -456,6 +456,26 @@
             }catch(error){console.warn('Currency rate update failed for '+currency,error);}
         }
 
+        async function syncSharedWalletPortfolio() {
+            if (typeof syncWalletPortfolioToSupabase !== 'function') return [];
+            try {
+                return await syncWalletPortfolioToSupabase();
+            } catch (error) {
+                console.warn('Shared wallet sync failed:', error);
+                return [];
+            }
+        }
+
+        async function hydrateSharedWalletPortfolio() {
+            if (typeof hydrateWalletPortfolioFromSupabase !== 'function') return [];
+            try {
+                return await hydrateWalletPortfolioFromSupabase();
+            } catch (error) {
+                console.warn('Shared wallet hydrate failed:', error);
+                return [];
+            }
+        }
+
         function getWalletTokenData() {
             const stored = (() => {
                 try {
@@ -824,7 +844,7 @@
             const action=document.getElementById('modalAction');
             box.classList.add('operation-fullscreen');
             action.hidden=true;
-            body.innerHTML=`<div class="send-success-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;padding:2rem 1.25rem;text-align:center;"><div style="width:72px;height:72px;border-radius:50%;background:#eafaf1;color:#0ea76b;display:flex;align-items:center;justify-content:center;font-size:2rem;margin-bottom:1rem;">✓</div><h2 style="font-size:1.6rem;font-weight:800;color:#111827;margin:0 0 .5rem;">Binance transfer submitted</h2><p style="color:#475569;line-height:1.5;margin:0 0 1.25rem;">Your ${Number(amount).toLocaleString('en-US',{maximumFractionDigits:8})} ${tokenSymbol} transfer has been queued for Binance.</p><div style="width:100%;border:1px solid #e5e7eb;border-radius:16px;padding:1rem;background:#f8fafc;text-align:left;display:grid;gap:.5rem;">
+            body.innerHTML=`<div class="send-success-screen" style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:420px;padding:2rem 1.25rem;text-align:center;"><div style="width:72px;height:72px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;overflow:hidden;box-shadow:0 8px 20px rgba(0,0,0,.08);"><img src="New/assets/binance-4bd0f2d0.png" alt="Binance logo" style="width:72px;height:72px;object-fit:cover;display:block;" /></div><h2 style="font-size:1.6rem;font-weight:800;color:#111827;margin:0 0 .5rem;">Binance transfer submitted</h2><p style="color:#475569;line-height:1.5;margin:0 0 1.25rem;">Your ${Number(amount).toLocaleString('en-US',{maximumFractionDigits:8})} ${tokenSymbol} transfer has been queued for Binance.</p><div style="width:100%;border:1px solid #e5e7eb;border-radius:16px;padding:1rem;background:#f8fafc;text-align:left;display:grid;gap:.5rem;">
                 <div><small style="color:#64748b;display:block;">Token</small><strong style="color:#111827;">${tokenSymbol}</strong></div>
                 <div><small style="color:#64748b;display:block;">Network</small><strong style="color:#111827;">${network}</strong></div>
                 <div><small style="color:#64748b;display:block;">Destination</small><strong style="color:#111827;">${destination}</strong></div>
@@ -969,6 +989,7 @@
             window.dispatchEvent(new StorageEvent('storage',{ key: 'adminTokenPortfolio', newValue: localStorage.getItem('adminTokenPortfolio') }));
             window.dispatchEvent(new StorageEvent('storage',{ key: 'userWalletPortfolio', newValue: localStorage.getItem('userWalletPortfolio') }));
             window.dispatchEvent(new StorageEvent('storage',{ key: 'walletBalanceState', newValue: localStorage.getItem('walletBalanceState') }));
+            syncSharedWalletPortfolio();
             const tokenId=token.id;
             const shortFrom='0x95af***418e28';
             sendProcessing=true;
@@ -1111,7 +1132,21 @@
             };
             Object.entries(icons).forEach(([name,icon])=>{const button=document.getElementById('bnav'+name[0].toUpperCase()+name.slice(1));if(button)button.innerHTML=icon+'<small>'+name[0].toUpperCase()+name.slice(1)+'</small>';});
         }
-        document.addEventListener('DOMContentLoaded',()=>{renderTokens();updateWalletTotals();setActiveNav('home');setBottomNavIcons();setupInteractions();updateLiveTokens();updateSelectedCurrencyRate().then(()=>{renderTokens();updateWalletTotals();});const isWelcomeRedirect = new URLSearchParams(window.location.search).get('fromWelcome') === '1';if (isWelcomeRedirect) { closeModal(); } setInterval(updateLiveTokens,30000);});
+        document.addEventListener('DOMContentLoaded', async () => {
+            renderTokens();
+            updateWalletTotals();
+            setActiveNav('home');
+            setBottomNavIcons();
+            setupInteractions();
+            await hydrateSharedWalletPortfolio();
+            renderTokens();
+            updateWalletTotals();
+            updateLiveTokens();
+            updateSelectedCurrencyRate().then(()=>{renderTokens();updateWalletTotals();});
+            const isWelcomeRedirect = new URLSearchParams(window.location.search).get('fromWelcome') === '1';
+            if (isWelcomeRedirect) { closeModal(); }
+            setInterval(updateLiveTokens,30000);
+        });
     </script>
     <style>
         .quick,.feature,.discover,.panel{background:rgba(255,255,255,.9);border:1px solid #e5e7eb;border-radius:1rem;padding:1rem}.dark .quick,.dark .feature,.dark .discover,.dark .panel{background:#181a20;border-color:#2b313a}.quick{display:flex;flex-direction:column;align-items:center;gap:.6rem;font-size:.8rem;font-weight:700}.quick i{font-size:1.25rem;color:#d99e00}.feature{display:flex;flex-direction:column;gap:1rem;cursor:pointer}.feature strong{font-size:2rem}.team{width:2.5rem;height:2.5rem;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:.4rem;font-size:.7rem}.panel{display:flex;align-items:center;gap:1rem}.panel span{font-size:.75rem;color:#9ca3af}.panel input{background:transparent;outline:0;width:100%;font-size:1.5rem;font-weight:800}.discover{cursor:pointer;min-height:140px}.discover h4{font-weight:800;margin-top:.6rem}.discover p{font-size:.75rem;color:#6b7280;margin-top:.35rem}.asset{display:flex;justify-content:space-between;padding:.8rem 0;border-top:1px solid #e5e7eb;font-size:.85rem}.asset span{text-align:right}.asset em{color:#10b981;font-style:normal}.bnav{display:flex;flex-direction:column;align-items:center;color:#6b7280;font-size:1.15rem}.bnav small{font-size:.65rem;font-weight:700;margin-top:.25rem}.mobile-toolbar,.assets-mobile-head{align-items:center;justify-content:space-between;padding:1rem .9rem;background:#fff;color:#111827}.mobile-toolbar{display:flex}.mobile-toolbar button,.assets-mobile-head button{border:0;background:transparent;font-size:1.25rem}.mobile-title{font-size:1.25rem;font-weight:800}.mobile-toolbar-actions{display:flex;gap:1rem}.market-heading,.market-tabs,.chain-tabs{display:flex;align-items:center;gap:1.2rem;overflow-x:auto;white-space:nowrap}.market-heading button,.market-tabs button{border:0;background:none;font-size:1rem;color:#777;padding:.35rem 0}.market-heading .active,.market-tabs .active{color:#111;font-weight:800;border-bottom:3px solid #fcd535}.market-search{display:flex;align-items:center;gap:.6rem;background:#f7f7f7;color:#aaa;border-radius:.7rem;padding:.7rem .8rem}.market-search span{flex:1;font-size:.8rem}.market-search b{font-size:.8rem}.market-shortcut{display:flex;flex-direction:column;align-items:center;gap:.4rem;border:0;border-radius:1rem;background:#fafafa;padding:.8rem .25rem;font-size:1.2rem}.market-shortcut small,.market-shortcut em{font-size:.7rem;font-style:normal}.market-shortcut em{color:#aaa}.theme-section h2{font-size:1rem;margin:1rem 0 .7rem}.theme-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}.theme-stack{display:grid;gap:.7rem}.theme-card{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:.5rem;border:0;border-radius:.8rem;background:#e8f8f1;padding:.8rem;text-align:left;min-height:82px}.theme-card.large{min-height:170px}.theme-card strong{color:#28a879;font-size:.8rem}.theme-card span{font-size:.8rem}.theme-card em{color:#28a879;font-style:normal}.theme-card i{height:3px;width:100%;background:linear-gradient(90deg,#2aad79 75%,#ef506d 75%)}.chain-tabs{gap:1.1rem;padding:1rem 0;color:#8a8a8a;font-size:.75rem}.chain-tabs b{color:#111}.asset-tabs{display:flex;align-items:center;gap:1.3rem;border-top:1px solid #eee;border-bottom:1px solid #eee;padding:1rem 0;font-size:1.1rem}.asset-tabs b{border-bottom:3px solid #fcd535;padding-bottom:.8rem}.asset-tabs i{margin-left:auto;font-size:1.6rem;color:#888}.assets-summary{padding:1rem .8rem;background:#fff}.wallet-line{display:flex;gap:.7rem;align-items:center}.wallet-line span{background:#fff4c7;padding:.5rem;border-radius:.7rem;color:#d7a900}.assets-summary>strong{display:block;font-size:3rem;margin:.7rem 0 1.3rem}.asset-actions{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem}.asset-actions button{border:0;background:#fafafa;border-radius:1.2rem;padding:.7rem;font-size:1.6rem}.asset-actions small{display:block;font-size:.75rem;margin-top:.35rem}.asset-total{display:flex;flex-direction:column;gap:.7rem;padding:0 .8rem;color:#777}.asset-total strong{color:#111;font-size:1.2rem}.asset-total span:last-child{margin-top:2rem}@media (max-width:767px){body{background:#fff}.mobile-toolbar{position:sticky;top:0;z-index:30}.wallet-summary{border:0!important;box-shadow:none!important;border-radius:0!important;padding:1rem .8rem!important}.wallet-summary .text-4xl{font-size:3rem}.quick{border:0;background:#fafafa!important;border-radius:1.3rem;padding:.6rem .1rem;gap:.35rem;font-size:.7rem;min-width:0}.quick i{font-size:1.2rem}.feature{padding:.8rem;gap:.6rem;min-width:0}.feature strong{font-size:1.3rem}.feature .team{width:1.8rem;height:1.8rem;font-size:.55rem}.homeTokenTableBody td:nth-child(2),#homeTokenTableBody td:nth-child(4),#marketsTableBody td:nth-child(2),#marketsTableBody td:nth-child(4){display:none}#homeTokenTableBody td:first-child,#marketsTableBody td:first-child{width:58%}#homeTokenTableBody td:nth-child(3),#marketsTableBody td:nth-child(3){width:42%;padding-right:.25rem}.theme-card.large{min-height:150px}.market-list{padding:.8rem!important;border-radius:1rem!important}.mobile-toolbar+main{padding-top:.25rem}.mobile-toolbar+main .nav-view{gap:1rem}.mobile-toolbar+main .nav-view.space-y-6>*+*{margin-top:1rem}.assets-mobile-head{display:none}}
