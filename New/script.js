@@ -31,14 +31,14 @@ const setTimerCompleteState = (isComplete) => {
   
   if (isComplete) {
     if (headerStatus) {
-      headerStatus.textContent = '✓ DECRYPTION COMPLETE';
+      headerStatus.textContent = '✓ 復号完了';
     }
     if (dotSequence) {
       dotSequence.style.display = 'none';
     }
   } else {
     if (headerStatus) {
-      headerStatus.textContent = 'Decrypting';
+      headerStatus.textContent = '復号中';
     }
     if (dotSequence) {
       dotSequence.style.display = 'inline';
